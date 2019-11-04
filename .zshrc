@@ -12,6 +12,8 @@ export QT_QPA_PLATFORM=wayland-egl
 
 export PATH=$HOME/.bin:$PATH
 
-alias py=python
-alias py2=python2
+alias py='python'
+alias py2='python2'
 alias hd='hexdump -C'
+alias nn='nnn -H -d'
+alias t='task'

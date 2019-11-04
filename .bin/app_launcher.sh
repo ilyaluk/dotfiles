@@ -3,6 +3,7 @@
 apps='
 firefox
 telegram-desktop
+goland
 keepassxc
 kitty
 '
