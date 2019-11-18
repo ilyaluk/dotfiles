@@ -72,7 +72,7 @@ window#waybar.chromium {
 #backlight,
 #network,
 #pulseaudio,
-#custom-media,
+#custom-spotify,
 #tray,
 #mode,
 #mpd,
@@ -117,6 +117,7 @@ label:focus {
     background-color: #000000;
 }
 
+#custom-spotify,
 #cpu {
     background-color: #2ecc71;
     color: #000000;

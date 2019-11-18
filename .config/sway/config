@@ -60,7 +60,7 @@ output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 #
 # You can get the names of your inputs by running: swaymsg -t get_inputs
 # Read `man 5 sway-input` for more information about this section.
-input * xkb_layout us(mac),ru(mac)
+input * xkb_layout us,ru
 input * xkb_options "grp:win_space_toggle"
 
 ### Key bindings
@@ -221,6 +221,13 @@ bindsym --to-code {
     $mod+XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -1%
     $mod+XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +1%
     XF86AudioMute             exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+    # Media
+    XF86Tools                 exec playerctl play-pause
+    XF86Bluetooth             exec playerctl next
+
+    # Lock screen
+    $mod+Shift+w              exec swaylock
 }
 
 #
@@ -246,7 +253,7 @@ for_window [title="TelegramDesktop"] {
     border pixel 1
     move position 1500 px 18 px
     # unfocus notification
-    focus mode_toggle
+    # focus mode_toggle
 }
 
 # vim:ai expandtab ts=4 sw=4
