@@ -2,6 +2,7 @@
 
 apps='
 firefox
+google-chrome
 telegram-desktop
 spotify
 goland

@@ -19,13 +19,15 @@ set $term kitty
 # Note: it's recommended that you pass the final command to sway
 set $menu run_app_launcher.sh
 
-font "pango:Fira Code 11"
+font "pango:FiraCode 11"
 titlebar_padding 5 2
 
 ### Output configuration
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
+output DP-1 position 0,0
+output DP-2 position 2560,0
 #
 # Example configuration:
 #
@@ -37,12 +39,12 @@ output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 #
 # Example configuration:
 #
-# exec swayidle -w \
-#          timeout 300 'swaylock -f -c 000000' \
-#          timeout 600 'swaymsg "output * dpms off"' \
-#               resume 'swaymsg "output * dpms on"' \
-#          before-sleep 'swaylock -f -c 000000'
-#
+exec swayidle -w \
+         timeout 300 'swaylock -f -c 444444' \
+         timeout 600 'swaymsg "output * dpms off"' \
+              resume 'swaymsg "output * dpms on"' \
+         before-sleep 'swaylock -f -c 444444'
+
 # This will lock your screen after 300 seconds of inactivity, then turn off
 # your displays after another 300 seconds, and turn your screens back on when
 # resumed. It will also lock your screen before your computer goes to sleep.
@@ -60,8 +62,21 @@ output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 #
 # You can get the names of your inputs by running: swaymsg -t get_inputs
 # Read `man 5 sway-input` for more information about this section.
-input * xkb_layout us,ru
-input * xkb_options "grp:win_space_toggle"
+input * {
+    xkb_layout us,ru
+    xkb_options "grp:win_space_toggle"
+}
+
+input 2:7:SynPS/2_Synaptics_TouchPad {
+    dwt enabled
+    tap enabled
+    events disabled
+}
+
+input 2:10:TPPS/2_Elan_TrackPoint {
+    scroll_factor 0.66
+    pointer_accel 0.1
+}
 
 ### Key bindings
 #
@@ -223,11 +238,16 @@ bindsym --to-code {
     XF86AudioMute             exec pactl set-sink-mute @DEFAULT_SINK@ toggle
 
     # Media
+    XF86AudioNext             exec playerctl next
+    XF86AudioPrev             exec playerctl prev
+    XF86AudioPlay             exec playerctl play-pause
+    XF86AudioStop             exec playerctl pause
+    # for laptop w/o media keys
     XF86Tools                 exec playerctl play-pause
     XF86Bluetooth             exec playerctl next
 
     # Lock screen
-    $mod+Shift+w              exec swaylock
+    $mod+Shift+w              exec swaylock -f -c 444444
 }
 
 #
@@ -256,4 +276,5 @@ for_window [title="TelegramDesktop"] {
     # focus mode_toggle
 }
 
+exec sh -c "ssh-agent -s -a $SSH_AUTH_SOCK"
 # vim:ai expandtab ts=4 sw=4
