@@ -3,6 +3,8 @@ import threading
 import signal
 import subprocess
 import sys
+import os
+import time
 
 is_playing = True
 song = ""
@@ -33,19 +35,28 @@ def watch_song():
         print_update()
 
 def signal_handler(sig, frame):
-    sys.stdout.write('\n')
-    sys.stdout.flush()
-    sys.exit(0)
+    try:
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+    finally:
+        # ensure death of all subprocesses
+        os.killpg(0, signal.SIGKILL)
 
 def main():
+    os.setpgrp()
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGCHLD, signal_handler)
 
     t = threading.Thread(target=watch_status)
-    # to kill thread after SIGINT, we don't care about graceful termination
-    t.daemon = True
     t.start()
-    watch_song()
+    t2 = threading.Thread(target=watch_song)
+    t2.start()
+
+    while 1:
+        if os.getppid() == 1:
+            signal_handler(None, None)
+        time.sleep(1)
 
 if __name__ == '__main__':
     main()

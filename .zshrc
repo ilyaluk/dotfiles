@@ -1,5 +1,5 @@
 # todo(@ilyaluk) set up gopath here
-export PATH=$HOME/.bin:$HOME/go/bin:$PATH
+export PATH=$HOME/.bin:$HOME/.local/bin:$HOME/go/bin:$PATH
 
 if [ "$(tty)" = "/dev/tty1" ]; then
 	# Wayland tweaks
@@ -15,7 +15,8 @@ if [ "$(tty)" = "/dev/tty1" ]; then
 	exec dbus-launch --exit-with-session sway
 fi
 
-[[ -f ~/.zshrc.grml ]] && source .zshrc.grml
+[[ -f ~/.zshrc.grml ]] && source ~/.zshrc.grml
+[[ -f /etc/bash_completion.d/g4d ]] && source /etc/bash_completion.d/g4d
 
 HISTFILE=~/.histfile
 HISTSIZE=100000
@@ -36,7 +37,11 @@ select-word-style bash
 bind2maps emacs viins       -- Up history-beginning-search-backward-end
 bind2maps emacs viins       -- Down history-beginning-search-forward-end
 
-alias py='python'
+autoload -z edit-command-line
+zle -N edit-command-line
+bindkey "^X^E" edit-command-line
+
+alias py='python3'
 alias py2='python2'
 alias hd='hexdump -C'
 alias nn='nnn -H -d'

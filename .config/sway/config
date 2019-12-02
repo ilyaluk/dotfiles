@@ -4,6 +4,8 @@
 #
 # Read `man 5 sway` for a complete reference.
 
+include "$HOME/.cache/wal/colors-sway"
+
 ### Variables
 #
 # Logo key. Use Mod1 for Alt.
@@ -26,8 +28,8 @@ titlebar_padding 5 2
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
-output DP-1 position 0,0
-output DP-2 position 2560,0
+output DP-1 position 0,550
+output DP-2 transform 270 position 2560,0
 #
 # Example configuration:
 #
@@ -76,6 +78,10 @@ input 2:7:SynPS/2_Synaptics_TouchPad {
 input 2:10:TPPS/2_Elan_TrackPoint {
     scroll_factor 0.66
     pointer_accel 0.1
+}
+input 6127:24647:Lenovo_ThinkPad_Compact_USB_Keyboard_with_TrackPoint {
+    scroll_factor 0.66
+    pointer_accel -0.25
 }
 
 ### Key bindings
@@ -174,7 +180,7 @@ bindsym --to-code {
     $mod+f fullscreen
 
     # Toggle the current focus between tiling and floating mode
-    $mod+Shift+space floating toggle
+    $mod+x floating toggle
 
     # Swap focus between the tiling area and the floating area
     $mod+space focus mode_toggle
@@ -203,16 +209,16 @@ mode "resize" {
         # right will grow the containers width
         # up will shrink the containers height
         # down will grow the containers height
-        $left resize shrink width 10px
-        $down resize grow height 10px
-        $up resize shrink height 10px
-        $right resize grow width 10px
+        $left resize shrink width 20px
+        $down resize grow height 20px
+        $up resize shrink height 20px
+        $right resize grow width 20px
 
         # Ditto, with arrow keys
-        Left resize shrink width 10px
-        Down resize grow height 10px
-        Up resize shrink height 10px
-        Right resize grow width 10px
+        Left resize shrink width 20px
+        Down resize grow height 20px
+        Up resize shrink height 20px
+        Right resize grow width 20px
 
         # Return to default mode
         Return mode "default"
@@ -245,6 +251,7 @@ bindsym --to-code {
     # for laptop w/o media keys
     XF86Tools                 exec playerctl play-pause
     XF86Bluetooth             exec playerctl next
+    XF86Search                exec playerctl next
 
     # Lock screen
     $mod+Shift+w              exec swaylock -f -c 444444
@@ -273,7 +280,7 @@ for_window [title="TelegramDesktop"] {
     border pixel 1
     move position 1500 px 18 px
     # unfocus notification
-    # focus mode_toggle
+    focus tiling
 }
 
 exec sh -c "ssh-agent -s -a $SSH_AUTH_SOCK"

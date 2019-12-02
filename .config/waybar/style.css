@@ -1,3 +1,5 @@
+@import url('file:///usr/local/google/home/ilyaluk/.cache/wal/colors-waybar.css');
+
 * {
     border: none;
     border-radius: 0;
@@ -7,9 +9,8 @@
 }
 
 window#waybar {
-    background-color: rgba(43, 48, 59, 0.5);
-    border-bottom: 3px solid rgba(100, 114, 125, 0.5);
-    color: #ffffff;
+    background-color: @foreground;
+    color: @background;
     transition-property: background-color;
     transition-duration: .5s;
 }
@@ -39,7 +40,7 @@ window#waybar.chromium {
 #workspaces button {
     padding: 0 5px;
     background-color: transparent;
-    color: #ffffff;
+    color: @background;
     border-bottom: 3px solid transparent;
 }
 
@@ -47,21 +48,21 @@ window#waybar.chromium {
 #workspaces button:hover {
     background: rgba(0, 0, 0, 0.2);
     box-shadow: inherit;
-    border-bottom: 3px solid #ffffff;
+    border-bottom: 3px solid @background;
 }
 
 #workspaces button.focused {
-    background-color: #64727D;
-    border-bottom: 3px solid #ffffff;
+    background-color: @color8;
+    border-bottom: 3px solid @background;
 }
 
 #workspaces button.urgent {
-    background-color: #eb4d4b;
+    background-color: @color1;
 }
 
 #mode {
-    background-color: #64727D;
-    border-bottom: 3px solid #ffffff;
+    background-color: @color3;
+    border-bottom: 3px solid @background;
 }
 
 #clock,
@@ -79,11 +80,11 @@ window#waybar.chromium {
 #idle_inhibitor {
     padding: 0 6px;
     margin: 0 4px;
-    color: #ffffff;
+    color: @background;
 }
 
 #clock {
-    background-color: #64727D;
+    background-color: @color8;
 }
 
 #battery {
@@ -119,12 +120,12 @@ label:focus {
 
 #custom-spotify,
 #cpu {
-    background-color: #2ecc71;
-    color: #000000;
+    background-color: @color2;
+    color: @background;
 }
 
 #memory {
-    background-color: #9b59b6;
+    background-color: @color6;
 }
 
 #backlight {
@@ -132,21 +133,21 @@ label:focus {
 }
 
 #network {
-    background-color: #2980b9;
+    background-color: @color4;
 }
 
 #network.disconnected {
-    background-color: #f53c3c;
+    background-color: @color1;
 }
 
 #pulseaudio {
-    background-color: #f1c40f;
-    color: #000000;
+    background-color: @color3;
+    color: @background;
 }
 
 #pulseaudio.muted {
-    background-color: #90b1b1;
-    color: #2a5c45;
+    background-color: @color8;
+    color: @foreground;
 }
 
 #custom-media {
@@ -164,11 +165,11 @@ label:focus {
 }
 
 #temperature {
-    background-color: #f0932b;
+    background-color: @color3;
 }
 
 #temperature.critical {
-    background-color: #eb4d4b;
+    background-color: @color1;
 }
 
 #tray {
@@ -176,12 +177,12 @@ label:focus {
 }
 
 #idle_inhibitor {
-    background-color: #2d3436;
+    background-color: @color8;
 }
 
 #idle_inhibitor.activated {
-    background-color: #ecf0f1;
-    color: #2d3436;
+    background-color: @color0;
+    color: @foreground;
 }
 
 #mpd {
