@@ -32,7 +32,17 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(lua
+     (go :variables
+         go-tab-width 4
+         go-format-before-save t
+         gofmt-command "goimports"
+         ;; godoc-at-point-function 'godoc-gogetdoc
+         go-backend 'lsp
+         )
+     javascript
+     html
+     markdown
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
@@ -41,20 +51,24 @@ This function should only modify configuration layer settings."
      auto-completion
      ;; better-defaults
      emacs-lisp
-     ;; git
+     git
      helm
-     ;; lsp
-     ;; markdown
+     lsp
      multiple-cursors
      (org :variables
           org-want-todo-bindings t)
      ;; (shell :variables
      ;;        shell-default-height 30
      ;;        shell-default-position 'bottom)
-     spell-checking
+     ;; spell-checking
      syntax-checking
      treemacs
      ;; version-control
+     (python :variables
+             python-backend 'lsp
+             python-lsp-server 'pyls
+             )
+     protobuf
      )
 
    ;; List of additional packages that will be installed without being
@@ -64,7 +78,7 @@ This function should only modify configuration layer settings."
    ;; To use a local version of a package, use the `:location' property:
    ;; '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages '(reverse-im)
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -207,7 +221,7 @@ It should only modify the values of Spacemacs settings."
 
    ;; Default font or prioritized list of fonts.
    dotspacemacs-default-font '("JetBrains Mono"
-                               :size 15.0
+                               :size 20
                                :weight normal
                                :width normal)
 
@@ -467,6 +481,19 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+  (use-package reverse-im
+    :ensure t
+    :config
+    (reverse-im-activate "russian-computer"))
+
+  (global-auto-revert-mode t)
+  ;; we need to wrap into evl-after load because of concurring version of org-mode
+  (with-eval-after-load 'org
+    (add-hook 'auto-save-hook 'org-save-all-org-buffers)
+    )
+
+  ;; ignore language switching
+  (global-set-key (kbd "s-SPC") (lambda () (interactive)))
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
@@ -482,6 +509,14 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(evil-want-Y-yank-to-eol nil)
+ '(helm-ff-lynx-style-map t)
+ '(org-agenda-files
+   (quote
+    ("~/Dropbox/org/schedule.org" "~/Dropbox/org/good_life.org" "~/Dropbox/org/tasks.org" "~/Dropbox/org/life.org" "~/Dropbox/org/inbox.org")))
+ '(org-agenda-start-on-weekday nil)
+ '(org-default-notes-file "/home/user/Dropbox/org/inbox.org" t)
+ '(org-directory "~/Dropbox/org" t)
+ '(org-refile-targets (quote (("~/Dropbox/org/tasks.org" :maxlevel . 3))))
  '(org-todo-keyword-faces
    (quote
     (("TODO" . "blue")
@@ -494,12 +529,15 @@ This function is called at the very end of Spacemacs initialization."
     ((sequence "TODO(t!)" "WORK(w!)" "HOLD(h!)" "|" "DONE(d!)" "DONT(x!)"))))
  '(package-selected-packages
    (quote
-    (yasnippet-snippets org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download org-cliplink org-brain org-ql transient peg ov org-super-agenda dash-functional ts htmlize helm-org-rifle helm-org helm-company helm-c-yasnippet gnuplot fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip evil-org company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler writeroom-mode winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package treemacs-projectile treemacs-persp treemacs-evil toc-org symon symbol-overlay string-inflection spaceline-all-the-icons solarized-theme restart-emacs request rainbow-delimiters popwin pcre2el password-generator paradox overseer org-plus-contrib org-bullets open-junk-file nameless move-text macrostep lorem-ipsum link-hint indent-guide hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-mode-manager helm-make helm-ls-git helm-flx helm-descbinds helm-ag google-translate golden-ratio font-lock+ flycheck-package flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu elisp-slime-nav editorconfig dumb-jump dotenv-mode diminish devdocs define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line))))
+    (company-lua lua-mode protobuf-mode godoctor go-tag go-rename go-impl go-guru go-gen-test go-fill-struct go-eldoc flycheck-golangci-lint company-go go-mode json-navigator hierarchy json-mode json-snatcher json-reformat company-tern tern nodejs-repl livid-mode skewer-mode js2-refactor multiple-cursors js2-mode js-doc import-js grizzl web-mode web-beautify tagedit slim-mode scss-mode sass-mode pug-mode prettier-js impatient-mode simple-httpd helm-css-scss haml-mode emmet-mode company-web web-completion-data add-node-modules-path vmd-mode mmm-mode markdown-toc gh-md emoji-cheat-sheet-plus company-emoji yapfify stickyfunc-enhance pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements lsp-python-ms live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-gtags helm-cscope xcscope ggtags dap-mode lsp-treemacs bui lsp-mode markdown-mode cython-mode counsel-gtags counsel swiper ivy company-anaconda blacken anaconda-mode pythonic yasnippet-snippets org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download org-cliplink org-brain org-ql transient peg ov org-super-agenda dash-functional ts htmlize helm-org-rifle helm-org helm-company helm-c-yasnippet gnuplot fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip evil-org company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler writeroom-mode winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package treemacs-projectile treemacs-persp treemacs-evil toc-org symon symbol-overlay string-inflection spaceline-all-the-icons solarized-theme restart-emacs request rainbow-delimiters popwin pcre2el password-generator paradox overseer org-plus-contrib org-bullets open-junk-file nameless move-text macrostep lorem-ipsum link-hint indent-guide hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-mode-manager helm-make helm-ls-git helm-flx helm-descbinds helm-ag google-translate golden-ratio font-lock+ flycheck-package flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu elisp-slime-nav editorconfig dumb-jump dotenv-mode diminish devdocs define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((((class color) (min-colors 89)) (:foreground "#839496" :background "#002b36"))))
+ '(org-level-1 ((t (:inherit variable-pitch :foreground "#cb4b16" :height 1.15))))
+ '(org-level-2 ((t (:inherit variable-pitch :foreground "#859900" :height 1.1))))
+ '(org-level-3 ((t (:inherit variable-pitch :foreground "#268bd2" :height 1.0))))
+ '(org-level-4 ((t (:inherit variable-pitch :foreground "#b58900" :height 1.0))))
  '(variable-pitch ((t (:family "JetBrains Mono")))))
 )

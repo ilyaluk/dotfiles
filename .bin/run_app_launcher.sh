@@ -1,2 +1,2 @@
 #!/bin/bash
-kitty --class=AppLauncher app_launcher.sh
+kitty --class=AppLauncher $HOME/.bin/app_launcher.sh $1

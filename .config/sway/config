@@ -19,7 +19,7 @@ set $right l
 set $term kitty
 # Your preferred application launcher
 # Note: it's recommended that you pass the final command to sway
-set $menu run_app_launcher.sh
+set $menu run_app_launcher.sh sway
 
 font "pango:FiraCode 11"
 titlebar_padding 5 2
@@ -33,7 +33,9 @@ output DP-2 transform 270 position 2560,0
 #
 # Example configuration:
 #
-#   output HDMI-A-1 resolution 1920x1080 position 1920,0
+output HDMI-A-2 position 0,0
+output DP-1 position 0,0
+output eDP-1 position 0,1080
 #
 # You can get the names of your outputs by running: swaymsg -t get_outputs
 
@@ -70,9 +72,9 @@ input * {
 }
 
 input 2:7:SynPS/2_Synaptics_TouchPad {
-    dwt enabled
+    dwt disabled
     tap enabled
-    events disabled
+#    events disabled
 }
 
 input 2:10:TPPS/2_Elan_TrackPoint {
@@ -94,7 +96,7 @@ bindsym --to-code {
     # Kill focused window
     $mod+Shift+q kill
     # Start your launcher
-    Ctrl+Space exec $menu
+    $mod+d exec $menu
     # Reload the configuration file
     $mod+Shift+c reload
     # Exit sway
@@ -182,8 +184,7 @@ bindsym --to-code {
     # Toggle the current focus between tiling and floating mode
     $mod+x floating toggle
 
-    # Swap focus between the tiling area and the floating area
-    $mod+space focus mode_toggle
+    $mod+z sticky toggle
 
     # Move focus to the parent container
     $mod+a focus parent
@@ -242,6 +243,7 @@ bindsym --to-code {
     $mod+XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -1%
     $mod+XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +1%
     XF86AudioMute             exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+    XF86AudioMicMute          exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
     # Media
     XF86AudioNext             exec playerctl next
@@ -281,6 +283,9 @@ for_window [title="TelegramDesktop"] {
     move position 1500 px 18 px
     # unfocus notification
     focus tiling
+}
+for_window [app_id="io.github.carsonip.PenguinSubtitlePlayer"] {
+    border pixel 0
 }
 
 exec sh -c "ssh-agent -s -a $SSH_AUTH_SOCK"
