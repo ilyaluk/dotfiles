@@ -1,0 +1,77 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/zsh
+set -e
+
+# Dock
+defaults write com.apple.dock orientation -string left
+defaults write com.apple.dock tilesize -int 24
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock autohide-time-modifier -float 0
+defaults write com.apple.dock show-recents -bool false
+defaults write com.apple.dock static-only -bool true
+defaults write com.apple.dock mru-spaces -bool false
+defaults write com.apple.dock expose-group-apps -bool true
+defaults write com.apple.dock wvous-br-corner -int 0
+
+killall Dock
+
+# UIServer
+mkdir -p ~/Screenshots
+defaults write com.apple.screencapture location -string "~/Screenshots"
+
+defaults write com.apple.spaces spans-displays -bool false
+
+killall SystemUIServer
+
+# Safari
+defaults write com.apple.Safari ShowStandaloneTabBar -bool false
+defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
+defaults write com.apple.Safari.SandboxBroker ShowDevelopMenu -bool true
+defaults write com.apple.Safari IncludeDevelopMenu -bool true
+defaults write com.apple.Safari IncludeInternalDebugMenu  -bool true
+defaults write com.apple.Safari EnableEnhancedPrivacyInRegularBrowsing -bool true
+defaults write com.apple.Safari WebKitPreferences.privateClickMeasurementEnabled -bool false
+defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
+
+trap 'open /Applications/Safari.app' EXIT
+killall Safari || true
+
+# Finder
+defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+defaults write com.apple.finder AppleShowAllFiles -bool true
+defaults write com.apple.finder _FXSortFoldersFirst -bool true
+defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+# hide all items on desktop
+defaults write com.apple.finder CreateDesktop -bool false
+defaults write NSGlobalDomain _HIHideMenuBar -bool true
+
+killall Finder
+
+# Mail
+defaults write com.apple.mail-shared DisableURLLoading -bool true
+
+# Global stuff
+defaults write NSGlobalDomain com.apple.mouse.scaling -float "3"
+defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+# All the locales, hehe
+defaults write NSGlobalDomain NSUserKeyEquivalents -dict-add \
+	'Minimise' "'@~^$]'" \
+	'Minimise All' "'@~^$]'" \
+	'Minimize' "'@~^$]'" \
+	'Minimize All' "'@~^$]'" \
+	'Select Next Tab' '@k' \
+	'Select Previous Tab' '@j' \
+	'Show Next Tab' '@k' \
+	'Show Previous Tab' '@j'
+
+# disable switch input on fn
+defaults write com.apple.HIToolbox AppleFnUsageType -int "0"
+
+# disable spotlight hotkey
+defaults write com.apple.symbolichotkeys.plist AppleSymbolicHotKeys -dict-add 64 "<dict><key>enabled</key><false/></dict>"
+defaults write com.apple.symbolichotkeys.plist AppleSymbolicHotKeys -dict-add 65 "<dict><key>enabled</key><false/></dict>"
+
+echo "now you should reboot to apply all the changes"
+
+{{- end }}

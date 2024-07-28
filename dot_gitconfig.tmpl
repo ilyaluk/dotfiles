@@ -1,0 +1,27 @@
+[user]
+	name = Ilya Lukyanov
+	email = ilya@luk.moe
+
+[alias]
+	st = status
+	co = checkout
+	difs = diff --staged
+	dif = diff
+	pushh = push -u origin HEAD
+	pushf = push --force-with-lease
+	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+
+[pull]
+	rebase = false
+[fetch]
+	prune = true
+[init]
+	defaultBranch = main
+[credential]
+	helper = store
+[diff]
+	colormoved = "default"
+	colormovedws = "allow-indentation-change"
+
+[url "git@github.com:"]
+	insteadOf = https://github.com/

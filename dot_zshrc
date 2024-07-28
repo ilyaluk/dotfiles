@@ -1,0 +1,167 @@
+if [[ -n "$ZPROF" ]]; then
+    zmodload zsh/zprof
+fi
+
+# ================================================
+# Various paths
+export HOMEBREW_PREFIX="/opt/homebrew"
+export HOMEBREW_CELLAR="/opt/homebrew/Cellar"
+export HOMEBREW_REPOSITORY="/opt/homebrew"
+
+paths=(
+    "/usr/bin"
+    "/bin"
+    "/usr/sbin"
+    "/sbin"
+    "/Library/Apple/usr/bin"
+    "$HOMEBREW_PREFIX/bin"
+    "$HOMEBREW_PREFIX/sbin"
+    "/Applications/Wireshark.app/Contents/MacOS"
+    "/Applications/Tailscale.app/Contents/MacOS"
+    "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
+    "$HOME/go/bin"
+    "$HOME/.local/bin"
+    "$HOME/.cargo/bin"
+    "$HOME/.pyenv/bin"
+    "$HOME/Library/Python/3.7/bin"
+    "$HOME/Library/Python/3.8/bin"
+    "$HOME/Library/Python/3.9/bin"
+    "$HOME/Library/Python/3.10/bin"
+    "$HOME/Library/Python/3.11/bin"
+    "$HOME/Library/Python/3.12/bin"
+)
+export PATH=$(IFS=:; echo "${paths[*]}")
+
+# enable zsh completion
+fpath=(
+    $HOMEBREW_PREFIX/share/zsh/site-functions
+    $HOME/.zsh/functions
+    $fpath
+)
+
+export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH+:$MANPATH}:"
+export INFOPATH="$HOMEBREW_PREFIX/share/info:${INFOPATH:-}"
+
+export GOPATH="$HOME/go"
+
+# ================================================
+# Apps config
+export GIT_TERMINAL_PROMPT=1
+export LESS="RSXF"
+export TERRAGRUNT_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
+export LIMA_SHELL=zsh
+# sometimes Python under Ansible crashes unexpectedly without this
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+
+# ================================================
+# Includes
+source ~/.zsh/grml_rc
+source ~/.zsh/iterm2_shell_integration
+source ~/.zsh/atuin
+
+source $HOMEBREW_PREFIX/Cellar/fzf/*/shell/key-bindings.zsh
+source $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# ================================================
+# Shell stuff
+export CDPATH=.:~/wrk:~/fun
+export EDITOR=nvim
+
+HISTFILE=~/.histfile
+HISTSIZE=100000000
+SAVEHIST=100000000
+setopt appendhistory autocd extendedglob completealiases
+
+# Stop Ctrl+W on / and .
+autoload -U select-word-style
+select-word-style bash
+WORDCHARS='*?_-[]~=&;!#$%^(){}<>'
+
+ZSH_HIGHLIGHT_STYLES[comment]=fg=blue
+zstyle :compinstall filename "$USER/.zshrc"
+zstyle ':prompt:grml:right:setup' items ''
+zstyle ':prompt:grml:left:setup' items change-root user at host rc path vcs percent
+
+autoload -z edit-command-line
+zle -N edit-command-line
+bindkey "^X^E" edit-command-line
+
+autoload -U +X bashcompinit && bashcompinit
+
+# ================================================
+# Aliases / functions
+alias -- -='cd -'
+
+alias py=python3
+alias ipy=ipython3
+alias vim=nvim
+alias diff=colordiff
+alias tf=terraform
+alias tg=terragrunt
+alias k=kubectl
+alias j=jj
+
+setopt complete_aliases
+
+alias b64='base64'
+alias b64d='base64 -d'
+function b64dcp () { echo $1 | base64 -d | pbcopy }
+function len() { echo ${#1} }
+alias hd='hexdump -C'
+alias sus='sort | uniq -c | sort'
+
+alias awsp='export AWS_PROFILE=$(cat ~/.aws/credentials | grep "^\[" | tr -d "\[" | tr -d "\]" | fzf)'
+
+alias prv='gh pr view -w'
+alias prc='gh pr create -f'
+
+alias bump='it2attention start'
+alias bumpfw='it2attention fireworks'
+
+function jm() {
+	branch=master
+	if [[ -n $(jj branch list main) ]]; then branch=main; fi
+	jj git fetch
+	jj new $branch
+}
+
+function newpr() {
+	branch=$1
+	if [[ -z $branch ]]; then
+		if ! jj status | grep '^Working copy :' | grep '(empty)' > /dev/null; then
+			jj commit
+		fi
+		branch="@-"
+	fi
+	jj git push -c "$branch"
+	gh pr create -H $(jj log -r "$branch" -T branches --no-graph) -B $(jj log -r "latest(::(${branch}-) & branches())" -T branches --no-graph)
+}
+
+# ================================================
+# Expand .... to ../../.. in the command line
+function expand-dots() {
+    local MATCH
+    if [[ $LBUFFER =~ '\.\.\.+' && ! $LBUFFER =~ '^.*go ' ]]; then
+        LBUFFER=$LBUFFER:fs%\.\.\.%../..%
+    fi
+}
+
+function expand-dots-then-expand-or-complete() {
+    zle expand-dots
+    zle expand-or-complete
+}
+
+function expand-dots-then-accept-line() {
+    zle expand-dots
+    zle accept-line
+}
+
+zle -N expand-dots
+zle -N expand-dots-then-expand-or-complete
+zle -N expand-dots-then-accept-line
+bindkey '^I' expand-dots-then-expand-or-complete
+bindkey '^M' expand-dots-then-accept-line
+
+if [[ -n "$ZPROF" ]]; then
+    zprof
+fi

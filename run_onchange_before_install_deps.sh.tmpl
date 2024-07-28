@@ -1,0 +1,24 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/zsh
+set -ex
+
+brew bundle --file=/dev/stdin <<EOF
+{{ include "Brewfile" }}
+EOF
+
+# This is not done by brew bundle, and app is not signed
+xattr -rd com.apple.quarantine /Applications/Stretchly.app
+
+if [ ! -f /Library/Apple/usr/lib/libRosettaAot.dylib ]; then
+    softwareupdate --install-rosetta --agree-to-license
+fi
+
+if [ ! -f "$HOME/.cargo/bin/cargo" ]; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path
+fi
+
+if [ ! -f "$HOME/.cargo/bin/jwt" ]; then
+    cargo install jwt-cli
+fi
+
+{{ end }}
