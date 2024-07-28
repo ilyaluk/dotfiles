@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# This script sets iTerm2 user-defined variables describing the state of the jj
+# repo in the current directory.
+#
+# For more information on the status bar, see:
+# https://www.iterm2.com/3.3/documentation-status-bar.html
+#
+# Installation instructions for this script:
+#
+# bash: Place this in .bashrc.
+# --------------------------------------------------------------------------------------
+# function iterm2_print_user_vars() {
+#   it2jj
+# }
+
+# fish: Place this in ~/.config/fish/config.fish after the line
+#       "source ~/.iterm2_shell_integration.fish".
+# --------------------------------------------------------------------------------------
+# function iterm2_print_user_vars
+#   it2jj
+# end
+
+# tcsh: Place this in .tcshrc
+# --------------------------------------------------------------------------------------
+# alias get_current_branch "bash -c '((jj branch 2> /dev/null) | grep \* | cut -c3-)'"
+# alias _iterm2_user_defined_vars 'it2jj'
+
+# zsh:Place this in .zshrc after "source /Users/georgen/.iterm2_shell_integration.zsh".
+# --------------------------------------------------------------------------------------
+# iterm2_print_user_vars() {
+#   it2jj
+# }
+
+JJ_BINARY=/opt/homebrew/bin/jj
+
+function iterm2_set_user_var() {
+  printf "\033]"
+  printf "1337;SetUserVar=%s=%s" "$1" $(printf "%s" "$2" | base64 | tr -d '\n')
+  printf "\007"
+}
+
+jj_status () {
+    STATUS="$1"
+
+    comment="$(echo "$STATUS" | grep 'Working copy :' | cut -d' ' -f6-)"
+    comment="${comment#(empty) }"
+    if [[ ${#comment} -gt 50 ]]; then
+        comment="${comment:0:50}…"
+    fi
+    iterm2_set_user_var jjComment "$comment"
+
+    if echo "$STATUS" | grep -q "The working copy is clean"; then
+	iterm2_set_user_var jjStatus "(empty)"
+    else
+	jjAdds="$(echo "$STATUS" | grep -c '^A ')"
+        jjDels="$(echo "$STATUS" | grep -c '^R ')"
+        jjMods="$(echo "$STATUS" | grep -c '^M ')"
+	res=""
+	[[ "$jjAdds" != "0" ]] && res="${res}${jjAdds}+ "
+	[[ "$jjDels" != "0" ]] && res="${res}${jjDels}- "
+	[[ "$jjMods" != "0" ]] && res="${res}${jjMods}± "
+	res=${res%?} # remove last space
+	iterm2_set_user_var jjStatus "$res"
+    fi
+}
+
+JJ_STATUS=$("$JJ_BINARY" status 2>/dev/null)
+if (($?)); then
+    iterm2_set_user_var jjComment ""
+    iterm2_set_user_var jjStatus ""
+else
+    jj_status "$JJ_STATUS"
+fi
+
+
