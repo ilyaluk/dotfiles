@@ -1,0 +1,10 @@
+---
+description: Raycast
+sudo: false
+current_host: false
+data:
+  com.raycast.macos:
+    NSStatusItem Visible raycastIcon: false
+    enforcedInputSourceIDOnOpen: com.apple.keylayout.ABC
+    onboardingCompleted: true
+    raycastGlobalHotkey: Command-49

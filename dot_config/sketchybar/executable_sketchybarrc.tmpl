@@ -12,7 +12,22 @@ PLUGIN_DIR="$CONFIG_DIR/plugins"
 # If you are looking for other colors, see the color picker:
 # https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
 
-sketchybar --bar position=bottom topmost=window color=0xff000000 height=25 padding_left=0 padding_right=0 --hotload true
+{{- if .hasNotch }}
+POSITION=top
+BAR_HEIGHT=33
+{{- else }}
+POSITION=bottom
+BAR_HEIGHT=25
+{{- end }}
+
+sketchybar --bar \
+    position=$POSITION \
+    height=$BAR_HEIGHT \
+    topmost=window \
+    color=0xff000000 \
+    padding_left=0 \
+    padding_right=0 \
+    --hotload true
 
 ##### Changing Defaults #####
 # We now change some default values, which are applied to all further items.
@@ -37,7 +52,7 @@ sketchybar --default "${default[@]}"
 
 ##### Adding Mission Control Space Indicators #####
 SPACE_ICONS=("0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "10")
-for sid in $(aerospace list-workspaces --all); do
+for sid in {1..9}; do
     space=(
         icon="${SPACE_ICONS[sid]}"
         padding_right=0

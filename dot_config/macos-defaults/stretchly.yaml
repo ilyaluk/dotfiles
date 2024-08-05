@@ -1,0 +1,10 @@
+---
+description: net.hovancik.stretchly
+sudo: false
+current_host: false
+data:
+  net.hovancik.stretchly:
+    AppleTextDirection: true
+    NSForceRightToLeftWritingDirection: false
+    NSFullScreenMenuItemEverywhere: false
+    NSTreatUnknownArgumentsAsOpen: "NO"

@@ -1,0 +1,17 @@
+---
+description: HyperSwitch
+sudo: false
+current_host: false
+data:
+  com.bahoom.HyperSwitch:
+    SUEnableAutomaticChecks: true
+    app_icons_size: 0
+    deactivate_animation: 0
+    not_first_launch: true
+    run_in_background: true
+    send_debugging_statistics: false
+    shift_to_cycle_backwards: true
+    show_prefs_on_next_launch: false
+    welcome_window_shown: true
+    window_switcher_current_app_mod: 2
+    window_switcher_mod: 2

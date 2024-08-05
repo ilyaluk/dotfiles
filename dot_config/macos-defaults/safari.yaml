@@ -1,0 +1,25 @@
+---
+description: Safari config
+sudo: false
+current_host: false
+kill: ["Safari"]
+data:
+  com.apple.Safari:
+    ShowStandaloneTabBar: false
+    ShowFullURLInSmartSearchField: true
+    NeverUseBackgroundColorInToolbar: true
+
+    FindOnPageMatchesWordStartsOnly: false
+
+    HistoryAgeInDaysLimit: 365000
+
+    IncludeDevelopMenu: true
+    IncludeInternalDebugMenu: true
+
+    EnableEnhancedPrivacyInRegularBrowsing: true
+    WebKitPreferences.privateClickMeasurementEnabled: false
+
+    AutoOpenSafeDownloads: false
+
+  com.apple.SandboxBroker:
+    ShowDevelopMenu: true

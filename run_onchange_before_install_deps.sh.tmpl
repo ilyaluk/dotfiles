@@ -22,7 +22,11 @@ if [ ! -f "$HOME/.cargo/bin/cargo" ]; then
 fi
 
 if [ ! -f "$HOME/.cargo/bin/jwt" ]; then
-    cargo install jwt-cli
+    ~/.cargo/bin/cargo install jwt-cli
+fi
+
+if [ ! -f "$HOME/.cargo/bin/macos-defaults" ]; then
+    ~/.cargo/bin/cargo install --git https://github.com/dsully/macos-defaults --rev 82db239
 fi
 
 {{ end }}

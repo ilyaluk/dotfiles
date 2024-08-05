@@ -1,0 +1,5 @@
+{{ $email := promptStringOnce . "email" "Default email on this machine" "ilya@luk.moe" -}}
+
+[data]
+    email = {{ $email | quote }}
+    hasNotch = {{ promptBoolOnce . "hasNotch" "Does this machine have notch" true }}

@@ -1,6 +1,6 @@
 [user]
 	name = Ilya Lukyanov
-	email = ilya@luk.moe
+	email = {{ .email | quote }}
 
 [alias]
 	st = status
@@ -22,6 +22,3 @@
 [diff]
 	colormoved = "default"
 	colormovedws = "allow-indentation-change"
-
-[url "git@github.com:"]
-	insteadOf = https://github.com/

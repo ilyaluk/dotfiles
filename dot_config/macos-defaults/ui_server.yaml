@@ -1,0 +1,10 @@
+---
+description: UI server config
+sudo: false
+current_host: false
+kill: ["SystemUIServer"]
+data:
+  com.apple.spaces:
+    spans-displays: true # disable "Displays have separate Spaces"
+  com.apple.screencapture:
+    location: ~/Screenshots

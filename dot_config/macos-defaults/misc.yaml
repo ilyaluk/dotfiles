@@ -1,0 +1,7 @@
+---
+description: Misc settings
+sudo: false
+current_host: false
+data:
+  com.apple.mail-shared:
+    DisableURLLoading: true

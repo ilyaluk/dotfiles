@@ -1,0 +1,17 @@
+---
+description: Dock settings
+sudo: false
+current_host: false
+kill: ["Dock"]
+data:
+  com.apple.dock:
+    orientation: left
+    tilesize: 24
+    autohide: true
+    autohide-time-modifier: 0.0
+
+    show-recents: false # disable recent apps in dock
+    static-only: true # disable all elements in dock
+    mru-spaces: false # don't rearrange spaces
+    expose-group-apps: true # group app windows in expose
+    wvous-br-corner: 0 # disable hot corner for quick note

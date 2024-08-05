@@ -1,0 +1,52 @@
+---
+description: Global and Finder settings
+sudo: false
+current_host: false
+kill: ["Finder"]
+data:
+  NSGlobalDomain:
+    com.apple.mouse.scaling: 3.0
+
+    NSAutomaticQuoteSubstitutionEnabled: false
+    NSAutomaticDashSubstitutionEnabled: false
+
+    # All the locales, hehe
+    NSUserKeyEquivalents:
+      Minimise: "@~^$]"
+      Minimize All: "@~^$]"
+      Select Previous Tab: "@j"
+      Show Previous Tab: "@j"
+      Show Next Tab: "@k"
+      Minimise All: "@~^$]"
+      Minimize: "@~^$]"
+      Select Next Tab: "@k"
+
+    AppleShowAllExtensions: true
+    _HIHideMenuBar: true
+
+    AppleFirstWeekday:
+      gregorian: 2 # Monday
+
+    # Use the Caps Lock key to switch to and from ABC
+    TISRomanSwitchState: 1
+
+  com.apple.finder:
+    CreateDesktop: false # don't create anything on desktop
+    _FXSortFoldersFirst: true
+    AppleShowAllFiles: true
+    FXEnableExtensionChangeWarning: false
+
+  com.apple.HIToolbox:
+    # disable switch input on fn
+    AppleFnUsageType: 0
+
+  com.apple.symbolichotkeys.plist:
+    AppleSymbolicHotKeys:
+      # disable spotlight hotkeys
+      "64":
+        enabled: false
+      "65":
+        enabled: false
+
+  com.apple.Accessibility:
+    ReduceMotionEnabled: 1

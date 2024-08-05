@@ -1,5 +1,10 @@
 {{ if eq .chezmoi.os "darwin" -}}
 #!/bin/zsh
-# .aerospace.toml hash: {{ include "dot_aerospace.toml" | sha256sum }}
-aerospace reload-config
+
+# .aerospace.toml hash: {{ include "dot_aerospace.toml.tmpl" | sha256sum }}
+
+if pgrep -x "AeroSpace"
+then
+	aerospace reload-config
+fi
 {{ end }}

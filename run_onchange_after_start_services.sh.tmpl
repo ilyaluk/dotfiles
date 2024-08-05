@@ -1,0 +1,31 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/zsh
+
+brew services start sketchybar
+
+if ! pgrep -x "AeroSpace" > /dev/null
+then
+  open /Applications/AeroSpace.app
+fi
+
+if ! pgrep -x "Raycast" > /dev/null
+then
+  open /Applications/Raycast.app
+fi
+
+function add_login_item() {
+    osascript -e "tell application \"System Events\" to \
+        make new login item with properties { path:\"$1\", hidden:false } at end"
+}
+
+add_login_item /System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app
+add_login_item /System/Applications/Music.app
+add_login_item /System/Applications/Mail.app
+add_login_item /Applications/iTerm.app
+add_login_item /Applications/Raycast.app
+add_login_item /Applications/Stretchly.app
+add_login_item /Applications/Telegram.app
+add_login_item /Applications/Things3.app
+# TODO: hyperswitch here
+
+{{ end }}

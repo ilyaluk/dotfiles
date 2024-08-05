@@ -16,7 +16,7 @@ function set_apps_label() {
     else
         sketchybar --set space.$WS label.drawing=off
     fi
-    echo "$1: $icon_strip"
+    # echo "$1: $icon_strip"
 }
 
 WORKSPACES=$(seq 1 9)
