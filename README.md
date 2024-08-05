@@ -23,6 +23,7 @@ Not automated yet, future work:
 * * Telegram
 * * Mullvad
 * * Stretchly
+* * Slack settings
 * * Safari:
 * * * history expiration
 * * * enabled extensions
@@ -34,3 +35,9 @@ Not automated yet, future work:
 * Open at Login items: safari, iterm, tg, things, music, mail
 * Setting up mail/calendar
 * atuin history sync
+* OpenAI tokens in iTerm, Zed and Raycast
+
+* calendar in sketchybar
+* stretchly ignore in aerospace
+* safari disable tab color
+* openlens @alebcay/openlens-node-pod-menu

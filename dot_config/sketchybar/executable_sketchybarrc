@@ -152,8 +152,6 @@ sketchybar \
            --add item volume right \
            --set volume \
                script="$PLUGIN_DIR/volume.sh" \
-               label.width=32 \
-               label.align=right \
            --subscribe volume volume_change \
            \
            --add event input_source_change AppleSelectedInputSourcesChangedNotification \
@@ -169,6 +167,10 @@ sketchybar \
            --set stretchly \
                update_freq=10 \
                script="$PLUGIN_DIR/stretchly.sh" \
+            --add alias "Raycast,raycastCalendarStatusItem" right \
+            --set "Raycast,raycastCalendarStatusItem" \
+                padding_left=-11 \
+                padding_right=-11 \
 
 
 # --add alias "TextInputMenuAgent,Item-0" right \

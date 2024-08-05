@@ -14,6 +14,7 @@ paths=(
     "/usr/sbin"
     "/sbin"
     "/Library/Apple/usr/bin"
+    "/usr/local/bin"
     "$HOMEBREW_PREFIX/bin"
     "$HOMEBREW_PREFIX/sbin"
     "/Applications/Wireshark.app/Contents/MacOS"

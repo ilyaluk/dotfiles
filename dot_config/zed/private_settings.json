@@ -18,5 +18,13 @@
     "mode": "system",
     "light": "Solarized Light",
     "dark": "Solarized Dark"
+  },
+  "languages": {
+    "Markdown": {
+      "soft_wrap": "editor_width"
+    },
+    "HCL": {
+      "tab_size": 2
+    }
   }
 }

@@ -1,0 +1,15 @@
+[user]
+name = "Ilya Lukyanov"
+email = "ilya@luk.moe"
+
+[ui]
+default-description = "\n\nTask: BAR-1"
+default-command = "st"
+
+[git]
+push-branch-prefix = "ilyaluk/push-"
+
+[template-aliases]
+# Uppercase change ids. `jj` treats change and commit ids as case-insensitive.
+'format_short_change_id(id)' = 'id.shortest(12).prefix().upper() ++ "[" ++ id.shortest(12).rest() ++ "]"'
+

@@ -20,6 +20,7 @@ brew "flock"
 brew "fzf"
 brew "gawk"
 brew "gh"
+brew "glab"
 brew "gnupg"
 brew "htop"
 brew "hurl"
@@ -50,6 +51,7 @@ brew "wget"
 brew "yh"
 brew "zsh-syntax-highlighting"
 brew "felixkratz/formulae/sketchybar"
+cask "1password"
 cask "aerospace"
 cask "audacity"
 cask "font-hack-nerd-font"
@@ -65,9 +67,11 @@ cask "slack"
 cask "stretchly"
 cask "wireshark"
 cask "zed"
+cask "zoom"
 mas "Accelerate", id: 1459809092
 mas "AdGuard for Safari", id: 1440147259
 mas "Dark Reader for Safari", id: 1438243180
+mas "Refined GitHub", id: 1519867270
 mas "Tailscale", id: 1475387142
 mas "Telegram", id: 747648890
 mas "Things", id: 904280696

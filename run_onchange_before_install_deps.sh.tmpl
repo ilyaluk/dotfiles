@@ -13,6 +13,10 @@ if [ ! -f /Library/Apple/usr/lib/libRosettaAot.dylib ]; then
     softwareupdate --install-rosetta --agree-to-license
 fi
 
+if [ ! -f /usr/local/bin/devbox ]; then
+    curl -fsSL https://get.jetify.com/devbox | bash
+fi
+
 if [ ! -f "$HOME/.cargo/bin/cargo" ]; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path
 fi
