@@ -21,7 +21,6 @@ Stuff to do manually-ish:
 * Set up OpenAI tokens in iTerm, Zed and Raycast
 
 Not automated yet, future work:
-* iTerm settings and profiles
 * Some app settings / `defaults`:
 * * Enabled notifications
 * * Telegram (doesn't use defaults)
@@ -41,6 +40,7 @@ Not automated yet, future work:
 * * rust non-interactive
 * allow privacy permissions automatically
 * Cache zsh completions by scripts, not hardcode
-* install iterm python runtime/enable api
 * remove all quarantines from installed apps
 * keepass auto-open db form iCloud
+* macOS status bar items
+* screen lock time config

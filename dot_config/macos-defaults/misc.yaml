@@ -5,3 +5,5 @@ current_host: false
 data:
   com.apple.mail-shared:
     DisableURLLoading: true
+  com.apple.Music:
+    userWantsPlaybackNotifications: false

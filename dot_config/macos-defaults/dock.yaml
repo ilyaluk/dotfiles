@@ -15,3 +15,7 @@ data:
     mru-spaces: false # don't rearrange spaces
     expose-group-apps: true # group app windows in expose
     wvous-br-corner: 0 # disable hot corner for quick note
+
+    showDesktopGestureEnabled: false
+    showLaunchpadGestureEnabled: false
+    showAppExposeGestureEnabled: true

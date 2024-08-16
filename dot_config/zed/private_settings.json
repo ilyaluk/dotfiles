@@ -26,5 +26,14 @@
     "HCL": {
       "tab_size": 2
     }
+  },
+  "preview_tabs": {
+    "enabled": false
+  },
+  "terminal": {
+    "copy_on_select": true
+  },
+  "project_panel": {
+    "auto_fold_dirs": true
   }
 }

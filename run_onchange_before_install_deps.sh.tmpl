@@ -9,7 +9,7 @@ EOF
 # This is not done by brew bundle, and app is not signed
 xattr -rd com.apple.quarantine /Applications/Stretchly.app
 
-if [ ! -f /Library/Apple/usr/lib/libRosettaAot.dylib ]; then
+if [ "$(uname -m)" = "arm64" ] && [ ! -f /Library/Apple/usr/lib/libRosettaAot.dylib ]; then
     softwareupdate --install-rosetta --agree-to-license
 fi
 

@@ -20,6 +20,7 @@ brew "flock"
 brew "fzf"
 brew "gawk"
 brew "gh"
+brew "git-filter-repo"
 brew "glab"
 brew "gnupg"
 brew "htop"
@@ -57,20 +58,22 @@ cask "audacity"
 cask "font-hack-nerd-font"
 cask "gimp"
 cask "google-chrome"
-cask "iterm2"
-cask "itermai"
 cask "keepassxc"
 cask "mullvadvpn"
 cask "openlens"
 cask "raycast"
 cask "slack"
 cask "stretchly"
+cask "wezterm@nightly"
 cask "wireshark"
 cask "zed"
 cask "zoom"
 mas "Accelerate", id: 1459809092
 mas "AdGuard for Safari", id: 1440147259
 mas "Dark Reader for Safari", id: 1438243180
+mas "Keynote", id: 409183694
+mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
 mas "Refined GitHub", id: 1519867270
 mas "Tailscale", id: 1475387142
 mas "Telegram", id: 747648890

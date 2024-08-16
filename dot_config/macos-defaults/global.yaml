@@ -30,6 +30,9 @@ data:
     # Use the Caps Lock key to switch to and from ABC
     TISRomanSwitchState: 1
 
+    # Disable "Close windows when quitting an application"
+    NSQuitAlwaysKeepsWindows: true
+
   com.apple.finder:
     CreateDesktop: false # don't create anything on desktop
     _FXSortFoldersFirst: true
@@ -42,6 +45,11 @@ data:
 
   com.apple.symbolichotkeys.plist:
     AppleSymbolicHotKeys:
+      # disable input switch by ctrl+space
+      "60":
+        enabled: false
+      "61":
+        enabled: false
       # disable spotlight hotkeys
       "64":
         enabled: false

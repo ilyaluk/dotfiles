@@ -2,6 +2,9 @@
 #!/bin/zsh
 set -e
 
+# Disable metadata caching completely
+sudo mdutil -i off -a
+
 # config hashes
 {{ range (glob (joinPath .chezmoi.sourceDir "dot_config/macos-defaults/*")) -}}
 # {{ include . | sha256sum }}

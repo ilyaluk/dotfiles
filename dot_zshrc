@@ -43,8 +43,6 @@ fpath=(
 export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH+:$MANPATH}:"
 export INFOPATH="$HOMEBREW_PREFIX/share/info:${INFOPATH:-}"
 
-export GOPATH="$HOME/go"
-
 # ================================================
 # Apps config
 export GIT_TERMINAL_PROMPT=1
@@ -54,10 +52,13 @@ export LIMA_SHELL=zsh
 # sometimes Python under Ansible crashes unexpectedly without this
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
+# disable auto-title from grml-zsh-config
+export NOTITLE=1
+
 # ================================================
 # Includes
 source ~/.zsh/grml_rc
-source ~/.zsh/iterm2_shell_integration
+source ~/.zsh/wezterm_integration
 source ~/.zsh/atuin
 
 source $HOMEBREW_PREFIX/Cellar/fzf/*/shell/key-bindings.zsh
@@ -71,7 +72,7 @@ export EDITOR=nvim
 HISTFILE=~/.histfile
 HISTSIZE=100000000
 SAVEHIST=100000000
-setopt appendhistory autocd extendedglob completealiases
+setopt appendhistory autocd extendedglob
 
 # Stop Ctrl+W on / and .
 autoload -U select-word-style
@@ -90,6 +91,35 @@ bindkey "^X^E" edit-command-line
 autoload -U +X bashcompinit && bashcompinit
 
 # ================================================
+# Title setting
+function my_precmd_xterm_title() {
+    # shorten path elements if too long
+    # e.g. ~/wrk/long/project/path/aaa/bbb -> ~/w/l/p/path/aaa/bbb
+    local wd="${(%):-"%~"}"
+    if (( $(echo "$wd" | tr -cd '/' | wc -c) > 3 )); then
+    wd="$(echo "$wd" | awk -F'/' '{
+            for (i=1; i<=NF-3; i++) $i=substr($i, 1, 1);
+            print
+        }' OFS="/")"
+    fi
+    set_title "$wd"
+}
+
+function my_preexec_xterm_title() {
+    # set title to command being executed with ! prefix
+    # e.g. !htop
+    set_title "${(%):-""}!$2"
+}
+
+case $TERM in
+    (xterm*|rxvt*)
+        add-zsh-hook precmd my_precmd_xterm_title
+        add-zsh-hook preexec my_preexec_xterm_title
+        ;;
+esac
+
+
+# ================================================
 # Aliases / functions
 alias -- -='cd -'
 
@@ -102,8 +132,6 @@ alias tg=terragrunt
 alias k=kubectl
 alias j=jj
 
-setopt complete_aliases
-
 alias b64='base64'
 alias b64d='base64 -d'
 function b64dcp () { echo $1 | base64 -d | pbcopy }
@@ -111,7 +139,8 @@ function len() { echo ${#1} }
 alias hd='hexdump -C'
 alias sus='sort | uniq -c | sort'
 
-alias awsp='export AWS_PROFILE=$(cat ~/.aws/credentials | grep "^\[" | tr -d "\[" | tr -d "\]" | fzf)'
+alias awsp='export AWS_PROFILE=$(cat ~/.aws/config | grep "^\[profile" | cut -d" " -f2- | tr -d "\]" | fzf)'
+alias awsl='awsp; aws sso login'
 
 alias prv='gh pr view -w'
 alias prc='gh pr create -f'
