@@ -50,4 +50,22 @@ config.keys = {
 wezterm.on('update-status', status_bar.update_status)
 wezterm.on('format-tab-title', tab_title.format)
 
+wezterm.on('augment-command-palette', function(window, pane)
+    return {
+        {
+            brief = 'Rename tab',
+            icon = 'md_rename_box',
+
+            action = act.PromptInputLine {
+                description = 'Enter new name for tab',
+                action = wezterm.action_callback(function(window, pane, line)
+                    if line then
+                        window:active_tab():set_title(line)
+                    end
+                end),
+            },
+        },
+    }
+end)
+
 return config

@@ -13,10 +13,16 @@ local function has_unseen_output(tab)
 end
 
 function module.format(tab, tabs, panes, config, hover, max_width)
-    local title = string.format("[%d]: %s ", tab.tab_index + 1, tab.active_pane.title)
-
     local color
-    if tab.active_pane.title:sub(1, 1) == '!' then
+
+    local term_title = tab.active_pane.title
+    if #tab.tab_title > 0 then
+        term_title = tab.tab_title
+        color = "Yellow"
+    end
+    local title = string.format("[%d]: %s ", tab.tab_index + 1, term_title)
+
+    if term_title:sub(1, 1) == '!' then
         color = "Green"
     end
     if has_unseen_output(tab) then
