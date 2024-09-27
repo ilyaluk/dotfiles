@@ -1,0 +1,4 @@
+{{ if .zshHostColor | len -}}
+zstyle ':prompt:grml:left:items:host' pre '%F{{ "{" }}{{ .zshHostColor }}}'
+zstyle ':prompt:grml:left:items:host' post '%f'
+{{ end -}}

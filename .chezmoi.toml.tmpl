@@ -1,5 +1,7 @@
 {{ $email := promptStringOnce . "email" "Default email on this machine" "ilya@luk.moe" -}}
+{{ $zshHostColor := promptStringOnce . "zshHostColor" "Hostname color in zsh (empty - no)" "" -}}
 
 [data]
     email = {{ $email | quote }}
     hasNotch = {{ promptBoolOnce . "hasNotch" "Does this machine have notch" true }}
+    zshHostColor = {{ $zshHostColor | quote }}
