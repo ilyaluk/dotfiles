@@ -13,15 +13,13 @@ PLUGIN_DIR="$CONFIG_DIR/plugins"
 # https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
 
 {{- if .hasNotch }}
-POSITION=top
 BAR_HEIGHT=33
 {{- else }}
-POSITION=bottom
 BAR_HEIGHT=25
 {{- end }}
 
 sketchybar --bar \
-    position=$POSITION \
+    position=top \
     height=$BAR_HEIGHT \
     topmost=window \
     color=0xff000000 \

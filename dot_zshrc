@@ -62,6 +62,7 @@ export NOTITLE=1
 source ~/.zsh/grml_rc
 source ~/.zsh/wezterm_integration
 source ~/.zsh/atuin
+source ~/.zsh/devbox
 
 source $HOMEBREW_PREFIX/Cellar/fzf/*/shell/key-bindings.zsh
 source $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
