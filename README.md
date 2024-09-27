@@ -44,3 +44,7 @@ Not automated yet, future work:
 * keepass auto-open db form iCloud
 * macOS status bar items
 * screen lock time config
+
+
+* Lunar auto-start, allow accesibilty
+* Enable night shift

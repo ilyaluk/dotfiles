@@ -21,26 +21,33 @@ local function get_input_name()
 end
 
 function module.update_status(window)
+    local color_scheme = window:effective_config().resolved_palette
+    local fg = color_scheme.foreground
+    local bg = color_scheme.background
+
     -- segments_special contain segments that shown left to the rest of segments
     -- they have hardcoded colors, and mostly used for highlighting some special condition
     local segments_colored = {}
 
     local input = get_input_name()
+    local SOLID_RIGHT_ARROW = utf8.char(0xe0b0)
     if input and input:find('Russian') then
-        table.insert(segments_colored, {
-            Text = 'RU',
-            Background = { AnsiColor = 'Red' },
-        })
+        window:set_left_status(wezterm.format({
+            { Background = { AnsiColor = 'Red' } },
+            { Foreground = { Color = fg } },
+            { Text = ' RU ' },
+            { Background = { Color = 'none' } },
+            { Foreground = { AnsiColor = 'Red' } },
+            { Text = SOLID_RIGHT_ARROW },
+        }))
+    else
+        window:set_left_status('')
     end
 
     local segments = {}
 
     local host = wezterm.hostname():gmatch('[^.]+')()
     table.insert(segments, host)
-
-    local color_scheme = window:effective_config().resolved_palette
-    local fg = color_scheme.foreground
-    local bg = color_scheme.background
 
     -- Note the use of wezterm.color.parse here, this returns
     -- a Color object, which comes with functionality for lightening

@@ -43,6 +43,8 @@ fpath=(
 export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH+:$MANPATH}:"
 export INFOPATH="$HOMEBREW_PREFIX/share/info:${INFOPATH:-}"
 
+export GOPATH="$HOME/go"
+
 # ================================================
 # Apps config
 export GIT_TERMINAL_PROMPT=1
@@ -155,6 +157,17 @@ function jm() {
 	jj new $branch
 }
 
+function newmr() {
+	branch=$1
+	if [[ -z $branch ]]; then
+		if ! jj status | grep '^Working copy :' | grep '(empty)' > /dev/null; then
+			jj commit
+		fi
+		branch="@-"
+	fi
+	jj git push -c "$branch"
+	glab mr create --source-branch $(jj log -r "$branch" -T branches --no-graph) --target-branch $(jj log -r "latest(::(${branch}-) & branches())" -T branches --no-graph) --fill --fill-commit-body --web
+}
 function newpr() {
 	branch=$1
 	if [[ -z $branch ]]; then
@@ -166,6 +179,9 @@ function newpr() {
 	jj git push -c "$branch"
 	gh pr create -H $(jj log -r "$branch" -T branches --no-graph) -B $(jj log -r "latest(::(${branch}-) & branches())" -T branches --no-graph)
 }
+
+# use zed binary, not zsh function
+unfunction zed
 
 # ================================================
 # Expand .... to ../../.. in the command line

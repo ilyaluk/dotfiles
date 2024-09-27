@@ -1,16 +1,9 @@
 local wezterm = require 'wezterm'
 
-local appearance = require 'appearance'
 local status_bar = require 'status_bar'
 local tab_title = require 'tab_title'
 
 local config = wezterm.config_builder()
-
-if appearance.is_dark() then
-    config.color_scheme = 'Solarized Dark (Gogh)'
-else
-    config.color_scheme = 'Solarized Light (Gogh)'
-end
 
 config.font_size = 16
 config.window_frame = {
@@ -67,5 +60,30 @@ wezterm.on('augment-command-palette', function(window, pane)
         },
     }
 end)
+
+function scheme_for_appearance(appearance)
+  if appearance:find 'Dark' then
+    return 'Solarized Dark (Gogh)'
+  else
+    return 'Solarized Light (Gogh)'
+  end
+end
+
+wezterm.on('window-config-reloaded', function(window, pane)
+  local overrides = window:get_config_overrides() or {}
+  local appearance = window:get_appearance()
+  local scheme = scheme_for_appearance(appearance)
+  print("appearance: " .. appearance)
+  print("scheme: " .. scheme)
+
+  if overrides.color_scheme then
+    print("color_scheme: " .. overrides.color_scheme)
+  end
+  if overrides.color_scheme ~= scheme then
+    overrides.color_scheme = scheme
+    window:set_config_overrides(overrides)
+  end
+end)
+
 
 return config

@@ -1,3 +1,4 @@
 --ignore-dir=.terragrunt-cache
 --ignore-dir=.terraform
 --ignore-dir=.jj
+--ignore-dir=.devbox

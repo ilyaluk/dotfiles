@@ -7,6 +7,14 @@
 // custom settings, run the `zed: Open Default Settings` command
 // from the command palette
 {
+  "assistant": {
+    "default_model": {
+      "provider": "openai",
+      "model": "gpt-4o"
+    },
+    "version": "2"
+  },
+  "format_on_save": "language_server",
   "base_keymap": "JetBrains",
   "telemetry": {
     "diagnostics": false,
@@ -27,13 +35,13 @@
       "tab_size": 2
     }
   },
-  "preview_tabs": {
-    "enabled": false
-  },
   "terminal": {
     "copy_on_select": true
   },
   "project_panel": {
     "auto_fold_dirs": true
+  },
+  "preview_tabs": {
+    "enabled": false
   }
 }
