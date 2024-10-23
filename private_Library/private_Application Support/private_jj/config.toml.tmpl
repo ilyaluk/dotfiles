@@ -12,3 +12,11 @@ push-branch-prefix = "ilyaluk/push-"
 [template-aliases]
 # Uppercase change ids. `jj` treats change and commit ids as case-insensitive.
 'format_short_change_id(id)' = 'id.shortest(12).prefix().upper() ++ "[" ++ id.shortest(12).rest() ++ "]"'
+
+[fix.tools.tf-fmt]
+command = ["terraform", "fmt", "-"]
+patterns = ["glob:'**/*.tf'"]
+
+[fix.tools.tg-hclfmt]
+command = ["tg-fmt"]
+patterns = ["glob:'**/terragrunt.hcl'"]

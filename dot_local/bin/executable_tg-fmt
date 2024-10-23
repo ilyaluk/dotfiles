@@ -1,0 +1,6 @@
+#!/bin/bash
+TMPFILE=$(mktemp)
+cat - > $TMPFILE
+terragrunt hclfmt --terragrunt-hclfmt-file $TMPFILE
+cat $TMPFILE
+rm $TMPFILE

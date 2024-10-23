@@ -145,6 +145,7 @@ alias sus='sort | uniq -c | sort'
 
 alias awsp='export AWS_PROFILE=$(cat ~/.aws/config | grep "^\[profile" | cut -d" " -f2- | tr -d "\]" | fzf)'
 alias awsl='awsp; aws sso login'
+alias docl="aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_ACCOUNT_NUM.dkr.ecr.eu-central-1.amazonaws.com"
 
 alias prv='gh pr view -w'
 alias prc='gh pr create -f'
@@ -152,6 +153,8 @@ alias prc='gh pr create -f'
 alias bump='it2attention start'
 alias bumpfw='it2attention fireworks'
 
+alias jl='jj log'
+alias jp='jj git push'
 function jm() {
 	branch=master
 	if [[ -n $(jj branch list main) ]]; then branch=main; fi
