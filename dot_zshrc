@@ -50,6 +50,7 @@ export GOPATH="$HOME/go"
 export GIT_TERMINAL_PROMPT=1
 export LESS="RSXF"
 export TERRAGRUNT_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
+export TENV_DETACHED_PROXY=true
 export LIMA_SHELL=zsh
 # sometimes Python under Ansible crashes unexpectedly without this
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
@@ -156,33 +157,33 @@ alias bumpfw='it2attention fireworks'
 alias jl='jj log'
 alias jp='jj git push'
 function jm() {
-	branch=master
-	if [[ -n $(jj branch list main) ]]; then branch=main; fi
+	bookmark=master
+	if [[ -n $(jj bookmark list main) ]]; then bookmark=main; fi
 	jj git fetch
-	jj new $branch
+	jj new $bookmark
 }
 
 function newmr() {
-	branch=$1
-	if [[ -z $branch ]]; then
+	bookmark=$1
+	if [[ -z $bookmark ]]; then
 		if ! jj status | grep '^Working copy :' | grep '(empty)' > /dev/null; then
 			jj commit
 		fi
-		branch="@-"
+		bookmark="@-"
 	fi
-	jj git push -c "$branch"
-	glab mr create --source-branch $(jj log -r "$branch" -T branches --no-graph) --target-branch $(jj log -r "latest(::(${branch}-) & branches())" -T branches --no-graph) --fill --fill-commit-body --web
+	jj git push -c "$bookmark"
+	glab mr create --source-branch $(jj log -r "$bookmark" -T bookmarks --no-graph) --target-branch $(jj log -r "latest(::(${bookmark}-) & bookmarks())" -T bookmarks --no-graph) --fill --fill-commit-body --web
 }
 function newpr() {
-	branch=$1
-	if [[ -z $branch ]]; then
+	bookmark=$1
+	if [[ -z $bookmark ]]; then
 		if ! jj status | grep '^Working copy :' | grep '(empty)' > /dev/null; then
 			jj commit
 		fi
-		branch="@-"
+		bookmark="@-"
 	fi
-	jj git push -c "$branch"
-	gh pr create -H $(jj log -r "$branch" -T branches --no-graph) -B $(jj log -r "latest(::(${branch}-) & branches())" -T branches --no-graph)
+	jj git push -c "$bookmark"
+	gh pr create -H $(jj log -r "$bookmark" -T bookmarks --no-graph) -B $(jj log -r "latest(::(${bookmark}-) & bookmarks())" -T bookmarks --no-graph)
 }
 
 # use zed binary, not zsh function

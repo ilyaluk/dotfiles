@@ -33,6 +33,9 @@
     },
     "HCL": {
       "tab_size": 2
+    },
+    "YAML": {
+      "format_on_save": "off"
     }
   },
   "terminal": {
