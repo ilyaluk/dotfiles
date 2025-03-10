@@ -11,12 +11,12 @@ PLUGIN_DIR="$CONFIG_DIR/plugins"
 # https://felixkratz.github.io/SketchyBar/config/bar
 # If you are looking for other colors, see the color picker:
 # https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
-
-{{- if .hasNotch }}
-BAR_HEIGHT=33
-{{- else }}
-BAR_HEIGHT=25
-{{- end }}
+notch=$(chezmoi execute-template '{{ .hasNotch }}')
+if [[ $notch == "true" ]]; then
+    BAR_HEIGHT=33
+else
+    BAR_HEIGHT=25
+fi
 
 sketchybar --bar \
     position=top \
@@ -180,6 +180,11 @@ sketchybar \
            --set stretchly \
                update_freq=10 \
                script="$PLUGIN_DIR/stretchly.sh" \
+           \
+           --add alias "Timing Tracker,info.eurocomp.Timing-setapp.TimingHelper.mainStatusItem" right \
+           --set "Timing Tracker,info.eurocomp.Timing-setapp.TimingHelper.mainStatusItem" \
+               padding_left=-11 \
+               padding_right=-11 \
            \
            --add alias "Raycast,raycastCalendarStatusItem" right \
            --set "Raycast,raycastCalendarStatusItem" \

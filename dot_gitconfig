@@ -1,6 +1,6 @@
 [user]
 	name = Ilya Lukyanov
-	email = {{ .email | quote }}
+	email = "ilya@luk.moe"
 
 [alias]
 	st = status
@@ -23,5 +23,5 @@
 	colormoved = "default"
 	colormovedws = "allow-indentation-change"
 
-[url "git@github.com:"]
-       insteadOf = https://github.com/
+[gpg "ssh"]
+	allowedSignersFile = ~/.ssh/allowed_signers

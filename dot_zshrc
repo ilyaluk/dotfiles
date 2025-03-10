@@ -24,6 +24,7 @@ paths=(
     "$HOME/.local/bin"
     "$HOME/.cargo/bin"
     "$HOME/.pyenv/bin"
+    "$HOME/.foundry/bin"
     "$HOME/Library/Python/3.7/bin"
     "$HOME/Library/Python/3.8/bin"
     "$HOME/Library/Python/3.9/bin"
@@ -49,7 +50,7 @@ export GOPATH="$HOME/go"
 # Apps config
 export GIT_TERMINAL_PROMPT=1
 export LESS="RSXF"
-export TERRAGRUNT_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
+export TG_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
 export TENV_DETACHED_PROXY=true
 export LIMA_SHELL=zsh
 # sometimes Python under Ansible crashes unexpectedly without this
@@ -156,6 +157,8 @@ alias bumpfw='it2attention fireworks'
 
 alias jl='jj log'
 alias jp='jj git push'
+alias jf='jj git fetch'
+
 function jm() {
 	bookmark=master
 	if [[ -n $(jj bookmark list main) ]]; then bookmark=main; fi
@@ -163,27 +166,56 @@ function jm() {
 	jj new $bookmark
 }
 
-function newmr() {
-	bookmark=$1
-	if [[ -z $bookmark ]]; then
-		if ! jj status | grep '^Working copy :' | grep '(empty)' > /dev/null; then
-			jj commit
-		fi
-		bookmark="@-"
-	fi
-	jj git push -c "$bookmark"
-	glab mr create --source-branch $(jj log -r "$bookmark" -T bookmarks --no-graph) --target-branch $(jj log -r "latest(::(${bookmark}-) & bookmarks())" -T bookmarks --no-graph) --fill --fill-commit-body --web
-}
 function newpr() {
-	bookmark=$1
-	if [[ -z $bookmark ]]; then
+	change_id=$1
+	if [[ -z $change_id ]]; then
 		if ! jj status | grep '^Working copy :' | grep '(empty)' > /dev/null; then
 			jj commit
 		fi
-		bookmark="@-"
+		change_id="@-"
 	fi
-	jj git push -c "$bookmark"
-	gh pr create -H $(jj log -r "$bookmark" -T bookmarks --no-graph) -B $(jj log -r "latest(::(${bookmark}-) & bookmarks())" -T bookmarks --no-graph)
+	echo "Enter branch name (empty to auto-generate):"
+	read branch_name
+	if [[ -n "$branch_name" ]]; then
+	    jj bookmark create "$branch_name" -r "$change_id"
+	    jj git push -b "$branch_name" --allow-new
+	else
+	    jj git push -c "$change_id"
+	fi
+	gh pr create -H $(jj log -r "$change_id" -T bookmarks --no-graph) -B $(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph)
+}
+
+function aws_add_ssh_key() {
+    instance_id="$(ssh -G "$1" | grep '^hostname '  | cut -d' ' -f2)"
+    profile="$(ssh -G "$1" | grep -oE -- '--profile [^ ]+' | cut -d' ' -f2)"
+
+    key_path="${2:-}"
+    if [ -z "$key_path" ]; then
+        if [ -f ~/.ssh/id_ed25519.pub ]; then
+            key_path=~/.ssh/id_ed25519.pub
+        elif [ -f ~/.ssh/id_rsa.pub ]; then
+            key_path=~/.ssh/id_rsa.pub
+        else
+            echo "No pubkey found in ~/.ssh/{id_ed25519.pub,id_rsa.pub}, specify one as the second argument"
+            return
+        fi
+    fi
+
+    ssh_key="$( <"$key_path" )"
+    remote_auth_keys="/home/ubuntu/.ssh/authorized_keys"
+
+    command_id=$(aws --profile "$profile" ssm send-command \
+        --document-name "AWS-RunShellScript" \
+        --parameters "commands=[\"grep -q '${ssh_key}' ${remote_auth_keys} || echo '${ssh_key}' >> ${remote_auth_keys}\"]" \
+        --instance-ids "[\"$instance_id\"]" \
+        --output text \
+        --query "Command.CommandId")
+
+    sleep 1
+
+    aws --profile "$profile" ssm list-command-invocations \
+        --command-id "$command_id" --details \
+        --query "CommandInvocations[].CommandPlugins[].{Status:Status}"
 }
 
 # use zed binary, not zsh function
@@ -217,3 +249,5 @@ bindkey '^M' expand-dots-then-accept-line
 if [[ -n "$ZPROF" ]]; then
     zprof
 fi
+
+. "$HOME/.grit/bin/env"

@@ -7,10 +7,21 @@
 // custom settings, run the `zed: Open Default Settings` command
 // from the command palette
 {
+  "features": {
+    "edit_prediction_provider": "copilot",
+    "copilot": true
+  },
+  "buffer_font_size": null,
+  "edit_predictions": {
+    "disabled_globs": [
+      ".env",
+      "ARTICLE.md"
+    ]
+  },
   "assistant": {
     "default_model": {
-      "provider": "openai",
-      "model": "gpt-4o"
+      "provider": "copilot_chat",
+      "model": "claude-3-7-sonnet"
     },
     "version": "2"
   },
@@ -20,12 +31,10 @@
     "diagnostics": false,
     "metrics": false
   },
-  "ui_font_size": 16,
-  "buffer_font_size": 16,
   "theme": {
     "mode": "system",
-    "light": "Solarized Light",
-    "dark": "Solarized Dark"
+    "light": "Zed Legacy: Solarized Light",
+    "dark": "Zed Legacy: Solarized Dark"
   },
   "languages": {
     "Markdown": {
@@ -33,6 +42,22 @@
     },
     "HCL": {
       "tab_size": 2
+    },
+    "C": {
+      "format_on_save": "off",
+      "hard_tabs": false,
+      "tab_size": 2
+    },
+    "C++": {
+      "format_on_save": "off",
+      "hard_tabs": false,
+      "tab_size": 2
+    },
+    "Rust": {
+      "format_on_save": "off"
+    },
+    "JSON": {
+      "format_on_save": "off"
     },
     "YAML": {
       "format_on_save": "off"
@@ -46,5 +71,27 @@
   },
   "preview_tabs": {
     "enabled": false
-  }
+  },
+  "ssh_connections": [
+    {
+      "host": "yotsugi",
+      "projects": [
+        {
+          "paths": [
+            "~/hw"
+          ]
+        }
+      ]
+    },
+    {
+      "host": "tsukihi",
+      "projects": [
+        {
+          "paths": [
+            "~/hw"
+          ]
+        }
+      ]
+    }
+  ]
 }

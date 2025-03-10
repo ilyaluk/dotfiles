@@ -43,6 +43,14 @@ config.keys = {
     },
 }
 
+config.mouse_bindings = {
+  {
+    event = { Down = { streak = 1, button = "Middle" } },
+    mods = "NONE",
+    action = wezterm.action.Nop,
+  },
+}
+
 wezterm.on('update-status', status_bar.update_status)
 wezterm.on('format-tab-title', tab_title.format)
 

@@ -1,5 +1,5 @@
 {
-  "excludedUrls": "https://app.clickup.com,https://mail.google.com,https://calendar.google.com",
+  "excludedUrls": "https://app.clickup.com,https://mail.google.com,https://calendar.google.com,https://app.ynab.com",
   "linkHintCharacters": "asdfjklqwerzxc",
   "detectByCursorStyle": false,
   "scrollSize": 150,

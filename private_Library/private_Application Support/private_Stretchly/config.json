@@ -8,7 +8,7 @@
 	"breakNotificationInterval": 30000,
 	"microbreakNotificationInterval": 10000,
 	"microbreak": true,
-	"break": true,
+	"break": false,
 	"microbreakStrictMode": true,
 	"breakStrictMode": false,
 	"morningHour": 6,
@@ -23,6 +23,7 @@
 	"mainColor": "#478484",
 	"miniBreakColor": "#478484",
 	"transparentMode": false,
+	"blurredBackground": false,
 	"opacity": 0.9,
 	"audio": "crystal-glass",
 	"miniBreakAudio": "crystal-glass",
@@ -274,10 +275,10 @@
 	"skipToNextMiniBreakShortcut": "",
 	"skipToNextLongBreakShortcut": "",
 	"resetBreaksShortcut": "",
-	"showBreakActionsInStrictMode": false,
+	"showTrayMenuInStrictMode": false,
 	"__internal__": {
 		"migrations": {
-			"version": "1.16.0"
+			"version": "1.17.2"
 		}
 	}
 }

@@ -16,7 +16,7 @@ else
     for MONITOR in $MONITORS; do
         WORKSPACES=$(aerospace list-workspaces --monitor $MONITOR)
         for WS in $WORKSPACES; do
-            # that's extremely hacky, but works for now
+            # we need to use 3-mon_num bc of inverted order in macos
             args+=(--set space.$WS display=$((3 - $MONITOR)))
         done
     done

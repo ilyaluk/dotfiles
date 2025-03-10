@@ -5,7 +5,7 @@
 setopt localoptions extendedglob NO_shwordsplit
 local jj_status jj_work_change_id jj_info
 
-jj_status=$( ${vcs_comm[cmd]} status --config-toml 'template-aliases."format_short_change_id(id)"="id.shortest(12).prefix()"' )
+jj_status=$( ${vcs_comm[cmd]} status --config 'template-aliases."format_short_change_id(id)"="id.shortest(12).prefix()"' )
 
 jj_work_change_id=$( echo "$jj_status" | grep "^Working copy :" | cut -d' ' -f4 )
 jj_work_change_info=$( echo "$jj_status" | grep "^Working copy :" | cut -d' ' -f6- )
