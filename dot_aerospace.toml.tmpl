@@ -1,8 +1,4 @@
-# Place a copy of this config to ~/.aerospace.toml
-# After that, you can edit ~/.aerospace.toml to your liking
-
-# It's not neceesary to copy all keys to your config.
-# If the key is missing in your config, "default-config.toml" will serve as a fallback
+{{ template "hash_tmpl_warn" . }}
 
 # You can use it to add commands that run after login to macOS user session.
 # 'start-at-login' needs to be 'true' for 'after-login-command' to work
@@ -93,10 +89,10 @@ alt-slash = 'layout tiles horizontal vertical'
 alt-period = 'layout accordion horizontal vertical'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#focus
-alt-h = 'focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors left'
-alt-j = 'focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors down'
-alt-k = 'focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors up'
-alt-l = 'focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors right'
+alt-h = 'focus --boundaries workspace --boundaries-action wrap-around-the-workspace left'
+alt-j = 'focus --boundaries workspace --boundaries-action wrap-around-the-workspace down'
+alt-k = 'focus --boundaries workspace --boundaries-action wrap-around-the-workspace up'
+alt-l = 'focus --boundaries workspace --boundaries-action wrap-around-the-workspace right'
 
 alt-f = 'fullscreen'
 alt-shift-f = 'macos-native-fullscreen'
