@@ -24,7 +24,7 @@ sketchybar --bar \
     topmost=window \
     color=0xff000000 \
     padding_left=0 \
-    padding_right=0 \
+    padding_right=6 \
     --hotload true
 
 ##### Changing Defaults #####
@@ -126,6 +126,7 @@ music=(
   padding_left=0
   padding_right=5
   drawing=on
+  updates=on
   label.padding_left=22
   label.padding_right=5
   label.font.size=10.0

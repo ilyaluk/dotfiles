@@ -138,6 +138,7 @@ cask "utm"
 cask "vagrant"
 cask "wezterm@nightly"
 cask "wireshark"
+cask "yellowdot"
 cask "zed"
 cask "zoom"
 mas "Accelerate", id: 1459809092
