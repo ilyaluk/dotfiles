@@ -1,0 +1,41 @@
+#!/usr/bin/env sh
+set -e
+
+# https://github.com/kvaps/kubectl-use, Apache License
+
+case $1 in
+-* | "")
+  echo
+  echo "  Usage:"
+  echo "    kubectl use <namespace>"
+  echo "    kubectl use <context>"
+  echo "    kubectl use <context> <namespace>"
+  echo
+  exit 1
+  ;;
+esac
+
+for context in $(kubectl config get-contexts -o name); do
+  if [ "$1" = "$context" ]; then
+    new_context="$1"
+    break
+  fi
+done
+
+if [ -n "$new_context" ]; then
+  kubectl config use "$1"
+  if [ -n "$2" ]; then
+    new_namespace="$2"
+  fi
+else
+  if [ -n "$2" ]; then
+    echo "Can not swith context \"$1\"."
+    exit 1
+  fi
+  new_namespace="$1"
+fi
+
+if [ -n "$new_namespace" ]; then
+  kubectl config set-context --current --namespace="$new_namespace" >/dev/null
+  echo "Switched to namespace \"$new_namespace\"."
+fi
