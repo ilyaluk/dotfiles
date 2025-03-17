@@ -2,6 +2,7 @@
   {
     "context": "Editor",
     "bindings": {
+      "cmd-1": ["workspace::ActivatePane", 0],
       "ctrl-alt-shift-down": "copilot::NextSuggestion",
       "ctrl-alt-shift-up": "copilot::PreviousSuggestion",
       "cmd-shift-o": "outline::Toggle",

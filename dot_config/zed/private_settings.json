@@ -64,6 +64,7 @@
     }
   },
   "terminal": {
+    "dock": "bottom",
     "copy_on_select": true
   },
   "project_panel": {

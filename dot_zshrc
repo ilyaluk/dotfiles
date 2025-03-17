@@ -96,26 +96,24 @@ function prompt_aws_profile () {
 grml_theme_add_token aws_profile -f prompt_aws_profile '%F{red}' '%f'
 
 function prompt_kube_ctx () {
+    REPLY=""
     # it's faster by couple of dozen of ms than kubectl config current-context
     ctx=$(cat ~/.kube/config | grep current-context | cut -d' ' -f2)
-    if [[ "$ctx" == '""' ]]; then
-        unset ctx
-    fi
     if [[ -n "$ctx" ]]; then
         # here it's easier than manually parsing the config, and slowing down only when context is set
         ns=$(kubectl config view --minify -o jsonpath='{..namespace}')
         if [[ -n "$ns" ]]; then
             ctx="$ctx:$ns"
         fi
+        REPLY="(k8s:${ctx:t}) "
     fi
-    REPLY=${ctx+(k8s:${ctx:t}) }
 }
 grml_theme_add_token kube_ctx -f prompt_kube_ctx '%F{magenta}' '%f'
 
 ZSH_HIGHLIGHT_STYLES[comment]=fg=blue
 zstyle :compinstall filename "$USER/.zshrc"
 zstyle ':prompt:grml:right:setup' items ''
-zstyle ':prompt:grml:left:setup' items venv aws_profile kube_ctx user at host rc path vcs percent
+zstyle ':prompt:grml:left:setup' items venv aws_profile kube_ctx user at host path vcs rc percent
 
 autoload -z edit-command-line
 zle -N edit-command-line
