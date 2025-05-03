@@ -42,7 +42,7 @@
 	"useMonochromeTrayIcon": true,
 	"useMonochromeInvertedTrayIcon": false,
 	"silentNotifications": false,
-	"monitorDnd": true,
+	"monitorDnd": false,
 	"microbreakStartSoundPlaying": false,
 	"breakStartSoundPlaying": false,
 	"themeSource": "system",

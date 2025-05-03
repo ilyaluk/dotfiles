@@ -17,6 +17,7 @@ paths=(
     "/usr/local/bin"
     "$HOMEBREW_PREFIX/bin"
     "$HOMEBREW_PREFIX/sbin"
+    "$HOMEBREW_PREFIX/opt/libpq/bin"
     "/Applications/Wireshark.app/Contents/MacOS"
     "/Applications/Tailscale.app/Contents/MacOS"
     "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
@@ -31,6 +32,7 @@ paths=(
     "$HOME/Library/Python/3.10/bin"
     "$HOME/Library/Python/3.11/bin"
     "$HOME/Library/Python/3.12/bin"
+    "$HOME/Library/pnpm"
 )
 export PATH=$(IFS=:; echo "${paths[*]}")
 
@@ -161,7 +163,6 @@ alias diff=colordiff
 alias tf=terraform
 alias tg=terragrunt
 alias k=kubectl
-alias j=jj
 
 alias b64='base64'
 alias b64d='base64 -d'
@@ -174,16 +175,19 @@ alias awsp='export AWS_PROFILE=$(cat ~/.aws/config | grep "^\[profile" | cut -d"
 alias awsl='awsp; aws sso login'
 alias docl="aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_ACCOUNT_NUM.dkr.ecr.eu-central-1.amazonaws.com"
 
-alias prv='gh pr view -w'
-alias prc='gh pr create -f'
+alias ghprv='gh pr view --web $(jj bookmark list -r "heads(::@- & bookmarks())" -T name)'
 
 alias bump='it2attention start'
 alias bumpfw='it2attention fireworks'
 
+alias j=jj
 alias jl='jj log'
+alias jn='jj new'
+alias js='jj squash'
 alias jp='jj git push'
 alias jf='jj git fetch'
 alias jbm="jj bookmark move --from 'heads(::@- & bookmarks())' --to @-"
+alias ju='jjui'
 
 function jm() {
 	bookmark=master
@@ -209,11 +213,16 @@ function newpr() {
 	    jj git push -c "$change_id"
 	fi
 	gh pr create -H $(jj log -r "$change_id" -T bookmarks --no-graph) -B $(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph)
+	ghprv
 }
 
 function aws_add_ssh_key() {
     instance_id="$(ssh -G "$1" | grep '^hostname '  | cut -d' ' -f2)"
     profile="$(ssh -G "$1" | grep -oE -- '--profile [^ ]+' | cut -d' ' -f2)"
+    region="$(ssh -G "$1" | grep -oE -- '--region [^ ]+' | cut -d' ' -f2)"
+    if [ -z "$region" ]; then
+        region="us-east-2"
+    fi
 
     key_path="${2:-}"
     if [ -z "$key_path" ]; then
@@ -230,19 +239,25 @@ function aws_add_ssh_key() {
     ssh_key="$( <"$key_path" )"
     remote_auth_keys="/home/ubuntu/.ssh/authorized_keys"
 
-    command_id=$(aws --profile "$profile" ssm send-command \
+    command_id=$(aws --region "$region" --profile "$profile" ssm send-command \
         --document-name "AWS-RunShellScript" \
         --parameters "commands=[\"grep -q '${ssh_key}' ${remote_auth_keys} || echo '${ssh_key}' >> ${remote_auth_keys}\"]" \
         --instance-ids "[\"$instance_id\"]" \
         --output text \
         --query "Command.CommandId")
 
-    sleep 1
+    sleep 0.5
 
-    aws --profile "$profile" ssm list-command-invocations \
+    aws --region "$region" --profile "$profile" ssm list-command-invocations \
         --command-id "$command_id" --details \
-        --query "CommandInvocations[].CommandPlugins[].{Status:Status}"
+        --output text \
+        --query "CommandInvocations[].CommandPlugins[].Status"
 }
+
+function _aws_add_ssh_key() {
+    _arguments '1:remote host:_ssh_hosts' '2:key path:_files'
+}
+compdef _aws_add_ssh_key aws_add_ssh_key
 
 # use zed binary, not zsh function
 unfunction zed
@@ -277,3 +292,11 @@ if [[ -n "$ZPROF" ]]; then
 fi
 
 . "$HOME/.grit/bin/env"
+
+# pnpm
+export PNPM_HOME="/Users/ilyaluk/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

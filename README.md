@@ -53,3 +53,4 @@ Not automated yet, future work:
 - enable timeout for keyboard backlight, managed by CoreBrightness.framework
 - setapp stuff
 - bettertouchtool settings
+- jjui

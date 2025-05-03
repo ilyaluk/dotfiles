@@ -3,7 +3,6 @@ name = "Ilya Lukyanov"
 email = "ilya@luk.moe"
 
 [ui]
-default-description = "DVO-"
 default-command = "st"
 #show-cryptographic-signatures = true
 
@@ -19,7 +18,8 @@ push-bookmark-prefix = "ilyaluk/push-"
 
 [template-aliases]
 # Uppercase change ids. `jj` treats change and commit ids as case-insensitive.
-'format_short_change_id(id)' = 'id.shortest(12).prefix().upper() ++ "[" ++ id.shortest(12).rest() ++ "]"'
+'format_short_change_id(id)' = 'id.shortest(12).prefix().upper() ++ id.shortest(12).rest()'
+default_commit_description = "DVO-"
 
 [fix.tools.tf-fmt]
 command = ["terraform", "fmt", "-"]

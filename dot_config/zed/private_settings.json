@@ -11,17 +11,23 @@
     "edit_prediction_provider": "copilot",
     "copilot": true
   },
+  "wrap_guides": [80],
   "buffer_font_size": null,
   "edit_predictions": {
-    "disabled_globs": [
-      ".env",
-      "ARTICLE.md"
-    ]
+    "disabled_globs": [".env", "ARTICLE.md"]
   },
-  "assistant": {
+  "agent": {
+    "inline_assistant_model": {
+      "provider": "anthropic",
+      "model": "claude-opus-4-latest"
+    },
+    "single_file_review": true,
+    "always_allow_tool_actions": false,
+    "default_profile": "write",
+    "profiles": {},
     "default_model": {
-      "provider": "copilot_chat",
-      "model": "claude-3-7-sonnet"
+      "provider": "anthropic",
+      "model": "claude-opus-4-latest"
     },
     "version": "2"
   },
@@ -38,9 +44,11 @@
   },
   "languages": {
     "Markdown": {
+      "format_on_save": "on",
       "soft_wrap": "editor_width"
     },
     "HCL": {
+      "format_on_save": "on",
       "tab_size": 2
     },
     "C": {
@@ -56,8 +64,11 @@
     "Rust": {
       "format_on_save": "off"
     },
-    "JSON": {
+    "TypeScript": {
       "format_on_save": "off"
+    },
+    "JSON": {
+      "format_on_save": "on"
     },
     "YAML": {
       "format_on_save": "off"
@@ -75,22 +86,10 @@
   },
   "ssh_connections": [
     {
-      "host": "yotsugi",
-      "projects": [
-        {
-          "paths": [
-            "~/hw"
-          ]
-        }
-      ]
-    },
-    {
       "host": "tsukihi",
       "projects": [
         {
-          "paths": [
-            "~/hw"
-          ]
+          "paths": ["~/hw"]
         }
       ]
     }

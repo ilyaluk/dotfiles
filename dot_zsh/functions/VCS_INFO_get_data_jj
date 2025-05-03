@@ -3,12 +3,10 @@
 ## Distributed under the same BSD-ish license as zsh itself.
 
 setopt localoptions extendedglob NO_shwordsplit
-local jj_status jj_work_change_id jj_info
+local jj_work_change_id jj_info
 
-jj_status=$( ${vcs_comm[cmd]} status --config 'template-aliases."format_short_change_id(id)"="id.shortest(12).prefix()"' )
-
-jj_work_change_id=$( echo "$jj_status" | grep "^Working copy :" | cut -d' ' -f4 )
-jj_work_change_info=$( echo "$jj_status" | grep "^Working copy :" | cut -d' ' -f6- )
+jj_work_change_id=$( jj show @ --no-patch --config 'templates.show="change_id.shortest(12).prefix()"' )
+jj_work_change_info=$( jj show @ --no-patch --config 'templates.show="format_commit_summary_with_refs(self, bookmarks)"' )
 
 jj_info=""
 [[ "$jj_work_change_info" == *"(conflict)"* ]] && jj_info="${jj_info}conflict "
