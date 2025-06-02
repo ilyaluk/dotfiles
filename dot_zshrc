@@ -199,7 +199,7 @@ function jm() {
 function newpr() {
 	change_id=$1
 	if [[ -z $change_id ]]; then
-		if ! jj status | grep '^Working copy :' | grep '(empty)' > /dev/null; then
+		if ! jj show @ --no-patch --config 'templates.show="format_commit_summary_with_refs(self, bookmarks)"' | grep '(empty)' > /dev/null; then
 			jj commit
 		fi
 		change_id="@-"
