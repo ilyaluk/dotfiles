@@ -18,6 +18,7 @@ paths=(
     "$HOMEBREW_PREFIX/bin"
     "$HOMEBREW_PREFIX/sbin"
     "$HOMEBREW_PREFIX/opt/libpq/bin"
+    "$HOMEBREW_PREFIX/share/google-cloud-sdk/path.zsh.inc"
     "/Applications/Wireshark.app/Contents/MacOS"
     "/Applications/Tailscale.app/Contents/MacOS"
     "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
@@ -81,6 +82,7 @@ HISTFILE=~/.histfile
 HISTSIZE=100000000
 SAVEHIST=100000000
 setopt appendhistory autocd extendedglob
+unsetopt completealiases
 
 # Stop Ctrl+W on / and .
 autoload -U select-word-style
@@ -161,6 +163,12 @@ alias ipy=ipython3
 alias vim=nvim
 alias diff=colordiff
 alias tf=terraform
+alias tfi='terraform init'
+alias tfp='terraform plan'
+alias tfa='terraform apply'
+alias tgi='terragrunt init'
+alias tgp='terragrunt plan'
+alias tga='terragrunt apply'
 alias tg=terragrunt
 alias k=kubectl
 
@@ -172,21 +180,26 @@ alias hd='hexdump -C'
 alias sus='sort | uniq -c | sort'
 
 alias awsp='export AWS_PROFILE=$(cat ~/.aws/config | grep "^\[profile" | cut -d" " -f2- | tr -d "\]" | fzf)'
-alias awsl='awsp; aws sso login'
+alias awsup='unset AWS_PROFILE'
+alias awsl='aws sso login'
 alias docl="aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_ACCOUNT_NUM.dkr.ecr.eu-central-1.amazonaws.com"
 
 alias ghprv='gh pr view --web $(jj bookmark list -r "heads(::@- & bookmarks())" -T name)'
 
-alias bump='it2attention start'
-alias bumpfw='it2attention fireworks'
+alias breath='zenta now --quick'
+alias breathe='zenta now'
+alias reflect='zenta reflect'
 
 alias j=jj
 alias jl='jj log'
 alias jn='jj new'
+alias je='jj edit'
 alias js='jj squash'
 alias jp='jj git push'
-alias jf='jj git fetch'
+alias jsp='jj squash && jj git push'
+alias jgf='jj git fetch'
 alias jbm="jj bookmark move --from 'heads(::@- & bookmarks())' --to @-"
+alias jbmp="jj bookmark move --from 'heads(::@- & bookmarks())' --to @- && jj git push"
 alias ju='jjui'
 
 function jm() {
@@ -194,6 +207,15 @@ function jm() {
 	if [[ -n $(jj bookmark list main) ]]; then bookmark=main; fi
 	jj git fetch
 	jj new $bookmark
+}
+
+function llm_desc() {
+    local change_ref="${1:-@}"
+	(jj show --stat "$change_ref"; jj diff --git -r "$change_ref") | \
+		llm -m claude-4-sonnet -s 'Generate git commit title and description based on provided change description and git-formatted diff. Include ticket number if it is present in the input. Use existing text desctiption (if provided) as a arefernce. Be succint. Describe changes as list, prepend each item with "- ". Output _only_ title, newline, message.' | \
+		jj desc --stdin "$change_ref"
+	# edit manually right after
+	jj desc "$change_ref"
 }
 
 function newpr() {
@@ -204,7 +226,7 @@ function newpr() {
 		fi
 		change_id="@-"
 	fi
-	base=$(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph)
+	base=$(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph | cut -d' ' -f1)
 	echo "Generating suggested branch name..."
 	suggest=$(jj log -r "${base}..@" --patch | llm -m claude-4-sonnet -s 'Generate a short git branch name based on the log and patches. Use following format: "{user}/{ticket-}{name}". User should be short name. If none of commits have ticket refence, dont include it. Output _only_ branch name.')
 	echo "Enter branch name. Empty to auto-generate. LLM suggested: $suggest"
@@ -304,3 +326,5 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+complete -o nospace -C /opt/homebrew/bin/terraform terraform

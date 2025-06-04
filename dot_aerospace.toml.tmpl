@@ -106,7 +106,7 @@ alt-shift-f = 'macos-native-fullscreen'
 
 cmd-h = []
 
-alt-enter = "exec-and-forget wezterm cli spawn --new-window"
+alt-shift-enter = "exec-and-forget wezterm cli spawn --new-window"
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#move
 alt-shift-h = 'move left'
@@ -232,6 +232,10 @@ run = 'move-node-to-workspace 3'
 
 [[on-window-detected]]
 if.app-id = 'com.tinyspeck.slackmacgap'
+run = 'move-node-to-workspace 3'
+
+[[on-window-detected]]
+if.app-id = 'org.whispersystems.signal-desktop'
 run = 'move-node-to-workspace 3'
 
 [[on-window-detected]]
