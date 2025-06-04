@@ -204,7 +204,10 @@ function newpr() {
 		fi
 		change_id="@-"
 	fi
-	echo "Enter branch name (empty to auto-generate):"
+	base=$(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph)
+	echo "Generating suggested branch name..."
+	suggest=$(jj log -r "${base}..@" --patch | llm -m claude-4-sonnet -s 'Generate a short git branch name based on the log and patches. Use following format: "{user}/{ticket-}{name}". User should be short name. If none of commits have ticket refence, dont include it. Output _only_ branch name.')
+	echo "Enter branch name. Empty to auto-generate. LLM suggested: $suggest"
 	read branch_name
 	if [[ -n "$branch_name" ]]; then
 	    jj bookmark create "$branch_name" -r "$change_id"
@@ -212,7 +215,8 @@ function newpr() {
 	else
 	    jj git push -c "$change_id"
 	fi
-	gh pr create -H $(jj log -r "$change_id" -T bookmarks --no-graph) -B $(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph)
+	head=$(jj log -r "$change_id" -T bookmarks --no-graph)
+	gh pr create -H $head -B $base
 	ghprv
 }
 
