@@ -4,8 +4,10 @@ Brewfile
 {{- if ne .chezmoi.os "darwin" }}
 Library
 .aerospace.toml
+.docker
 .config/karabiner
 .config/sketchybar
 .config/wezterm
 .iterm2
+.zsh/wezterm_integration
 {{- end }}

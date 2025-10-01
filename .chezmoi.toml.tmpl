@@ -1,9 +1,7 @@
 {{ $email := promptStringOnce . "email" "Default email on this machine" "ilya@luk.moe" -}}
 {{ $zshHostColor := promptStringOnce . "zshHostColor" "Hostname color in zsh (empty - no)" "" -}}
-{{ $ecrAcct := promptStringOnce . "ecrAcct" "ECR repo number" "123456789012" -}}
 
 [data]
     email = {{ $email | quote }}
     hasNotch = {{ promptBoolOnce . "hasNotch" "Does this machine have notch" true }}
     zshHostColor = {{ $zshHostColor | quote }}
-    ecrAcct = {{ $ecrAcct | quote }}
