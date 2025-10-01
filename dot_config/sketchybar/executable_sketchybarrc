@@ -35,8 +35,10 @@ sketchybar --bar \
 default=(
   padding_left=5
   padding_right=5
-  font.family="Hack Nerd Font"
-  font.style=Bold
+  icon.font.family="Hack Nerd Font"
+  icon.font.style=Bold
+  label.font.family="Hack Nerd Font"
+  label.font.style=Bold
   icon.font.size=17.0
   label.font.size=14.0
   icon.color=0xffffffff
@@ -84,7 +86,7 @@ fake_item=(
     padding_left=0
     padding_right=0
     background.drawing=off
-    text.drawing=off
+    icon.drawing=off
     label.drawing=off
 )
 sketchybar \
@@ -127,7 +129,8 @@ music=(
   padding_right=5
   drawing=on
   updates=on
-  label.padding_left=22
+  # label.padding_left=22
+  label.padding_left=0
   label.padding_right=5
   label.font.size=10.0
   background.color=0x00000000
@@ -136,25 +139,17 @@ music=(
   background.image.scale=0.5
   background.image.corner_radius=2
   label.max_chars=35
-  script="$PLUGIN_DIR/music.sh"
+  # script="$PLUGIN_DIR/music.sh"
+  script="$PLUGIN_DIR/apple_music.sh"
   click_script="open -a Music"
 )
 
 sketchybar \
            --add item clock right \
            --set clock \
-               update_freq=10 \
                padding_left=1 \
-               icon.drawing=off \
-               script="$PLUGIN_DIR/clock.sh" \
-           \
-           --add item date right \
-           --set date \
-               update_freq=10 \
-               padding_right=1 \
-               icon.drawing=off \
-               label.color=0xffa0a0a0 \
-               script="$PLUGIN_DIR/date.sh" \
+               icon.color=0xffa0a0a0 \
+               icon.font.size=14.0 \
            \
            --add item battery right \
            --set battery \
@@ -173,9 +168,10 @@ sketchybar \
            --set input "${input[@]}" \
            --subscribe input input_source_change \
            \
+           --add event apple_music com.apple.Music.playerInfo \
            --add item music right \
            --set music "${music[@]}" \
-           --subscribe music media_change \
+           --subscribe music apple_music \
            \
            --add item stretchly right \
            --set stretchly \
@@ -198,6 +194,8 @@ sketchybar \
 #     padding_left=-11 \
 #     padding_right=-11 \
 
+killall clock_helper >/dev/null 2>&1 || true
+$CONFIG_DIR/helpers/clock_helper &
 
 ##### Force all scripts to run the first time (never do this in a script) #####
 sketchybar --update

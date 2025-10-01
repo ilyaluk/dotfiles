@@ -13,8 +13,8 @@ backend = "ssh"
 key = "~/.ssh/id_ed25519.pub"
 #backends.ssh.allowed-signers = "~/.ssh/allowed_signers"
 
-[git]
-push-bookmark-prefix = "ilyaluk/push-"
+[templates]
+git_push_bookmark = "ilyaluk/push-"
 
 [template-aliases]
 # Uppercase change ids. `jj` treats change and commit ids as case-insensitive.

@@ -8,8 +8,7 @@
 // from the command palette
 {
   "features": {
-    "edit_prediction_provider": "copilot",
-    "copilot": true
+    "edit_prediction_provider": "zed"
   },
   "wrap_guides": [80],
   "buffer_font_size": null,
@@ -19,7 +18,7 @@
   "agent": {
     "inline_assistant_model": {
       "provider": "anthropic",
-      "model": "claude-opus-4-latest"
+      "model": "claude-opus-4-1-latest"
     },
     "single_file_review": true,
     "always_allow_tool_actions": false,
@@ -27,12 +26,11 @@
     "profiles": {},
     "default_model": {
       "provider": "anthropic",
-      "model": "claude-opus-4-latest"
-    },
-    "version": "2"
+      "model": "claude-opus-4-1-latest"
+    }
   },
   "format_on_save": "on",
-  "base_keymap": "JetBrains",
+  "base_keymap": "VSCode",
   "telemetry": {
     "diagnostics": false,
     "metrics": false
@@ -52,9 +50,10 @@
       "tab_size": 2
     },
     "C": {
-      "format_on_save": "off",
+      "format_on_save": "on",
       "hard_tabs": false,
-      "tab_size": 2
+      "tab_size": 2,
+      "preferred_line_length": 100
     },
     "C++": {
       "format_on_save": "off",
@@ -62,6 +61,9 @@
       "tab_size": 2
     },
     "Rust": {
+      "format_on_save": "off"
+    },
+    "JavaScript": {
       "format_on_save": "off"
     },
     "TypeScript": {
@@ -73,6 +75,9 @@
     "YAML": {
       "format_on_save": "off"
     }
+  },
+  "lsp": {
+    "clangd": {}
   },
   "terminal": {
     "dock": "bottom",

@@ -15,5 +15,23 @@
         }
       ]
     }
+  },
+  {
+    "context": "(((((Dock || Workspace) || OutlinePanel) || ProjectPanel) || CollabPanel) || (Editor && mode == auto_height))",
+    "bindings": {
+      "escape": "editor::ToggleFocus"
+    }
+  },
+  {
+    "context": "(Editor && edit_prediction_conflict)",
+    "bindings": {
+      "ctrl-alt-tab": "editor::AcceptEditPrediction"
+    }
+  },
+  {
+    "context": "(Editor && edit_prediction)",
+    "bindings": {
+      "ctrl-alt-tab": "editor::AcceptEditPrediction"
+    }
   }
 ]
