@@ -7,10 +7,12 @@
 // custom settings, run the `zed: Open Default Settings` command
 // from the command palette
 {
+  "icon_theme": "Zed (Default)",
   "features": {
-    "edit_prediction_provider": "zed"
+    "edit_prediction_provider": "copilot"
   },
   "wrap_guides": [80],
+  "buffer_font_family": "JetBrainsMono Nerd Font",
   "buffer_font_size": null,
   "edit_predictions": {
     "disabled_globs": [".env", "ARTICLE.md"]
@@ -18,7 +20,7 @@
   "agent": {
     "inline_assistant_model": {
       "provider": "anthropic",
-      "model": "claude-opus-4-1-latest"
+      "model": "claude-sonnet-4-5-latest"
     },
     "single_file_review": true,
     "always_allow_tool_actions": false,
@@ -26,7 +28,7 @@
     "profiles": {},
     "default_model": {
       "provider": "anthropic",
-      "model": "claude-opus-4-1-latest"
+      "model": "claude-sonnet-4-5-thinking-latest"
     }
   },
   "format_on_save": "on",
@@ -37,12 +39,12 @@
   },
   "theme": {
     "mode": "system",
-    "light": "Zed Legacy: Solarized Light",
-    "dark": "Zed Legacy: Solarized Dark"
+    "light": "Gruvbox Light",
+    "dark": "Gruvbox Dark"
   },
   "languages": {
     "Markdown": {
-      "format_on_save": "on",
+      "format_on_save": "off",
       "soft_wrap": "editor_width"
     },
     "HCL": {
@@ -50,7 +52,7 @@
       "tab_size": 2
     },
     "C": {
-      "format_on_save": "on",
+      "format_on_save": "off",
       "hard_tabs": false,
       "tab_size": 2,
       "preferred_line_length": 100

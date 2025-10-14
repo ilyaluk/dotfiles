@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 set -e
 
-sed -i '' '/^current-context:/d' ~/.kube/config
+sed -i'' '/^current-context:/d' ~/.kube/config
 echo "Unset current context"

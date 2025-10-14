@@ -7,19 +7,136 @@ default-command = "st"
 #show-cryptographic-signatures = true
 
 [signing]
-behavior = "own"
+behavior = "drop"
 backend = "ssh"
 
 key = "~/.ssh/id_ed25519.pub"
 #backends.ssh.allowed-signers = "~/.ssh/allowed_signers"
 
+[git]
+sign-on-push = true
+
+[colors]
+"test" = "red"
+
 [templates]
 git_push_bookmark = "ilyaluk/push-"
 
+[revset-aliases]
+'recent_work' = 'ancestors(visible_heads(), 3) & mutable()'
+
+# stack(x, n) is the set of mutable commits reachable from 'x',
+# with 'n' parents. 'n' is often useful to customize the display
+# and return set for certain operations. 'x' can be used to target
+# the set of 'roots' to traverse, e.g. @ is the current stack.
+'stack()' = 'stack(@)'
+'stack(x)' = 'stack(x, 2)'
+'stack(x, n)' = 'ancestors(reachable(x, mutable()), n)'
+
+'closest_bookmark(to)' = 'heads(::to & bookmarks())'
+'closest_pushable(to)' = 'heads(::to & mutable() & ~description(exact:"") & (~empty() | merges()))'
+
 [template-aliases]
+default_commit_description = '"DVO-"'
+
 # Uppercase change ids. `jj` treats change and commit ids as case-insensitive.
 'format_short_change_id(id)' = 'id.shortest(12).prefix().upper() ++ id.shortest(12).rest()'
-default_commit_description = '"DVO-"'
+
+'in_branch(commit)' = 'commit.contained_in("immutable_heads()..bookmarks()")'
+'closest_pushable(to)' = 'heads(::to & mutable() & ~description(exact:"") & (~empty() | merges()))'
+
+'log_json_stream' = '''
+  "{" ++
+    "change_id".escape_json() ++ ": " ++ stringify(change_id).escape_json() ++ ", " ++
+    "author".escape_json() ++ ": " ++ stringify(author).escape_json() ++
+  "}\n"
+'''
+
+'log_with_files' = '''
+if(root,
+  format_root_commit(self),
+  label(if(current_working_copy, "working_copy"),
+    concat(
+      format_short_commit_header(self) ++ "\n",
+      separate(" ",
+        if(empty, label("empty", "(empty)")),
+        if(description,
+          description.first_line(),
+          label(if(empty, "empty"), description_placeholder),
+        ),
+      ) ++ "\n",
+      if(self.contained_in("recent_work"), diff.summary()),
+    ),
+  )
+)
+'''
+
+'show_shell_status' = 'show_shell_status(self)'
+'show_shell_status(commit)' = '''
+concat(
+  "\n",
+  "Change ID: " ++ commit.change_id().shortest(4).prefix().upper() ++ commit.change_id().shortest(4).rest() ++ "\n",
+  surround("Bookmarks: ", "\n", separate(" ", commit.local_bookmarks(), commit.remote_bookmarks())),
+  surround("Tags     : ", "\n", commit.tags()),
+  "Author   : " ++ format_detailed_signature(commit.author()) ++ "\n",
+  "Committer: " ++ format_detailed_signature(commit.committer())  ++ "\n",
+  indent("    ",
+    if(commit.description(),
+    commit.description().trim_end(),
+    label(if(commit.empty(), "empty"), description_placeholder)) ++ "\n"),
+  "\n",
+)
+'''
+
+[aliases]
+ll = ["log", "-T", "log_with_files"]
+shell_status = ["show", "-T", "show_shell_status", "@"]
+
+tug = ["util", "exec", "--", "sh", "-c", """
+if [ "x$1" = "x" ]; then
+  jj bookmark move --from "closest_bookmark(@)" --to "closest_pushable(@)"
+else
+  jj bookmark move --to "closest_pushable(@)" "$@"
+fi
+""", ""]
+
+init = ["util", "exec", "--", "bash", "-c", """
+jj git init --colocate
+# only track origin branches, not upstream or others
+jj bookmark track 'glob:{main,master,trunk}@origin'
+"""]
+
+pull = ["util", "exec", "--", "bash", "-c", """
+closest="$(jj log -r 'closest_bookmark(@)' -n 1 -T 'bookmarks' --no-graph | cut -d ' ' -f 1)"
+closest="${closest%\\*}"
+jj git fetch
+jj log -n 1 -r "${closest}" 2>&1 > /dev/null && jj rebase -d "${closest}" || jj rebase -d 'trunk()'
+jj log -r 'stack()'
+"""]
+
+push = ["util", "exec", "--", "bash", "-c", """
+tuggable="$(jj log -r 'closest_bookmark(@)..closest_pushable(@)' -T '"n"' --no-graph)"
+[[ -n "$tuggable" ]] && jj tug
+pushable="$(jj log -r 'remote_bookmarks(remote=origin)..@' -T 'bookmarks' --no-graph)"
+[[ -n "$pushable" ]] && jj git push || echo "Nothing to push."
+closest="$(jj log -r 'closest_bookmark(@)' -n 1 -T 'bookmarks' --no-graph | cut -d ' ' -f 1)"
+closest="${closest%\\*}"
+tracked="$(jj bookmark list -r ${closest} -t -T 'if(remote == "origin", name)')"
+[[ "$tracked" == "$closest" ]] || jj bookmark track "${closest}@origin"
+"""]
+
+z = ["util", "exec", "--", "sh", "-c", """
+out=$(jj bookmark list -T 'separate("@", name, remote) ++ "\n"' 2> /dev/null | sort | uniq | fzf | head -n1)
+if [ -n "$out" ]; then
+  jj new "$out"
+fi
+""", ""]
+za = ["util", "exec", "--", "sh", "-c", """
+out=$(jj bookmark list -a -T 'separate("@", name, remote) ++ "\n"' 2> /dev/null | grep -v '@git$' | sort | uniq | fzf | head -n1)
+if [ -n "$out" ]; then
+  jj new "$out"
+fi
+""", ""]
 
 [fix.tools.tf-fmt]
 command = ["terraform", "fmt", "-"]

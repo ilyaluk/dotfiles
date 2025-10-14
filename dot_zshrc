@@ -34,6 +34,7 @@ paths=(
     "$HOME/Library/Python/3.11/bin"
     "$HOME/Library/Python/3.12/bin"
     "$HOME/Library/pnpm"
+    "/var/lib/flatpak/exports/bin"
 )
 export PATH=$(IFS=:; echo "${paths[*]}")
 
@@ -48,6 +49,12 @@ export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH+:$MANPATH}:"
 export INFOPATH="$HOMEBREW_PREFIX/share/info:${INFOPATH:-}"
 
 export GOPATH="$HOME/go"
+
+export XDG_DATA_DIRS="/usr/local/share:/usr/share:/var/lib/flatpak/exports/share:/home/ilya/.local/share/flatpak/exports/share"
+
+# activate mise for all mise-managed binaries
+# TODO: this command takes ~20ms, look into ways to source from file
+source <(mise activate)
 
 # ================================================
 # Apps config
@@ -65,17 +72,14 @@ export NOTITLE=1
 # ================================================
 # Includes
 source ~/.zsh/grml_rc
-source ~/.zsh/wezterm_integration
-source ~/.zsh/atuin
-source ~/.zsh/devbox
-source ~/.zsh/rc
 
-source $HOMEBREW_PREFIX/Cellar/fzf/*/shell/key-bindings.zsh
-source $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-
+#source $HOMEBREW_PREFIX/Cellar/fzf/*/shell/key-bindings.zsh
+#source $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source /usr/share/doc/fzf/examples/key-bindings.zsh
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # ================================================
 # Shell stuff
-export CDPATH=.:~/wrk:~/fun
+export CDPATH=.:~/fb:~/fun
 export EDITOR=nvim
 
 HISTFILE=~/.histfile
@@ -90,17 +94,18 @@ select-word-style bash
 WORDCHARS='*?_-[]~=&;!#$%^(){}<>'
 
 function prompt_venv () {
-    REPLY=${VIRTUAL_ENV+(venv:${VIRTUAL_ENV:t}) }
+    REPLY=${VIRTUAL_ENV+🐍${VIRTUAL_ENV:t} }
 }
 grml_theme_add_token venv -f prompt_venv '%F{green}' '%f'
 
 function prompt_aws_profile () {
-    REPLY=${AWS_PROFILE+(aws:${AWS_PROFILE:t}) }
+    REPLY=${AWS_PROFILE+🧱${AWS_PROFILE:t} }
 }
 grml_theme_add_token aws_profile -f prompt_aws_profile '%F{red}' '%f'
 
 function prompt_kube_ctx () {
     REPLY=""
+    [[ ! -f ~/.kube/config ]] && return
     # it's faster by couple of dozen of ms than kubectl config current-context
     ctx=$(cat ~/.kube/config | grep current-context | cut -d' ' -f2)
     if [[ -n "$ctx" ]]; then
@@ -109,7 +114,7 @@ function prompt_kube_ctx () {
         if [[ -n "$ns" ]]; then
             ctx="$ctx:$ns"
         fi
-        REPLY="(k8s:${ctx:t}) "
+        REPLY="☸ ${ctx:t} "
     fi
 }
 grml_theme_add_token kube_ctx -f prompt_kube_ctx '%F{magenta}' '%f'
@@ -123,7 +128,22 @@ autoload -z edit-command-line
 zle -N edit-command-line
 bindkey "^X^E" edit-command-line
 
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;1C" forward-word
+bindkey "^[[1;1D" backward-word
+bindkey "^[[1;9C" forward-word
+bindkey "^[[1;9D" backward-word
+
 autoload -U +X bashcompinit && bashcompinit
+autoload -U compinit && compinit
+
+# ================================================
+# misc autocompletes
+source ~/.zsh/mise_completion
+source ~/.zsh/atuin
+source ~/.zsh/jj
+source ~/.zsh/tailscale
+source ~/.zsh/rc
 
 # ================================================
 # Title setting
@@ -196,10 +216,12 @@ alias jn='jj new'
 alias je='jj edit'
 alias js='jj squash'
 alias jp='jj git push'
+alias jz='jj z'
+alias jza='jj za'
 alias jsp='jj squash && jj git push'
 alias jgf='jj git fetch'
-alias jbm="jj bookmark move --from 'heads(::@- & bookmarks())' --to @-"
-alias jbmp="jj bookmark move --from 'heads(::@- & bookmarks())' --to @- && jj git push"
+alias jbm='jj tug'
+alias jbmp="jj tug && jj git push"
 alias ju='jjui'
 
 function jm() {
@@ -317,7 +339,7 @@ if [[ -n "$ZPROF" ]]; then
     zprof
 fi
 
-. "$HOME/.grit/bin/env"
+# . "$HOME/.grit/bin/env"
 
 # pnpm
 export PNPM_HOME="/Users/ilyaluk/Library/pnpm"
@@ -327,4 +349,11 @@ case ":$PATH:" in
 esac
 # pnpm end
 
-complete -o nospace -C /opt/homebrew/bin/terraform terraform
+if ! pgrep ssh-agent > /dev/null; then
+    ssh-agent -t 12h > "$XDG_RUNTIME_DIR/ssh-agent.env"
+fi
+if [ ! -f "$SSH_AUTH_SOCK" ]; then
+    source "$XDG_RUNTIME_DIR/ssh-agent.env" >/dev/null
+fi
+
+# complete -o nospace -C /opt/homebrew/bin/terraform terraform

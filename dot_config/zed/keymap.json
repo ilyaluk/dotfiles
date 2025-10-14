@@ -17,7 +17,7 @@
     }
   },
   {
-    "context": "(((((Dock || Workspace) || OutlinePanel) || ProjectPanel) || CollabPanel) || (Editor && mode == auto_height))",
+    "context": "(((((Dock || Workspace) || OutlinePanel) || ProjectPanel) || CollabPanel) || (Editor && mode == auto_height && !PromptEditor))",
     "bindings": {
       "escape": "editor::ToggleFocus"
     }
