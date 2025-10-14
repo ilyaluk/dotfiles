@@ -1,0 +1,14 @@
+Host *
+  User ubuntu
+  AddKeysToAgent yes
+  ServerAliveInterval 60
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+  #ChallengeResponseAuthentication no
+  #ControlMaster auto
+  #ControlPath ~/.ssh/ssh-%r@%h:%p
+  #ControlPersist 60m
+  StrictHostKeyChecking accept-new
+  ExitOnForwardFailure yes
+
+Include config.d/*

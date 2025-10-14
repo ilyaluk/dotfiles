@@ -1,0 +1,8 @@
+default partial alphanumeric_keys
+xkb_symbols "basic" {
+    include "ru(mac)"
+
+    # taken from /usr/share/X11/xkb/symbols/ru, grep by "mac"
+    key <TLDE> { [          less,      greater  ] };
+    key <LSGT> { [  bracketright,  bracketleft  ] };
+};

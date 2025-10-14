@@ -1,0 +1,8 @@
+default partial alphanumeric_keys
+xkb_symbols "basic" {
+    include "us(mac)"
+
+    # taken from /usr/share/X11/xkb/symbols/us, grep by "mac"
+    key <TLDE> { [   section,  plusminus,       section,        plusminus ] };
+    key <LSGT> { [     grave, asciitilde,    dead_grave,        dead_horn ] };
+};

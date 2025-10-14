@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Slack
+GenericName=Slack
+Comment=You know, the messenger
+Exec=/var/lib/flatpak/exports/bin/org.chromium.Chromium --app=https://app.slack.com/client --enable-extensions
