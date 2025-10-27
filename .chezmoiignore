@@ -1,5 +1,5 @@
 *.md
-Brewfile
+pkgs
 .config/macos-defaults
 {{- if ne .chezmoi.os "darwin" }}
 Library

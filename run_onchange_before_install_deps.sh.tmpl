@@ -3,7 +3,7 @@
 set -ex
 
 brew bundle --file=/dev/stdin <<EOF
-{{ include "Brewfile" }}
+{{ include "pkgs/Brewfile" }}
 EOF
 
 # This is not done by brew bundle, and app is not signed

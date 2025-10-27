@@ -1,0 +1,9 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/zsh
+set -ex
+
+sudo apt update
+# remove comments and join lines into a single line
+sudo apt install {{ include "pkgs/apt" | replaceAllRegex "^#.*\n" ""  | replace "\n" " " }}
+sudo apt upgrade
+{{ end }}
