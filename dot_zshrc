@@ -179,7 +179,8 @@ esac
 alias -- -='cd -'
 
 alias py=python3
-alias ipy=ipython3
+alias python=python3
+alias ipy=python3
 alias vim=nvim
 alias diff=colordiff
 alias tf=terraform
@@ -335,10 +336,6 @@ zle -N expand-dots-then-accept-line
 bindkey '^I' expand-dots-then-expand-or-complete
 bindkey '^M' expand-dots-then-accept-line
 
-if [[ -n "$ZPROF" ]]; then
-    zprof
-fi
-
 # . "$HOME/.grit/bin/env"
 
 # pnpm
@@ -360,4 +357,8 @@ fi
 
 if [ -z "$WAYLAND_DISPLAY" ] && [ -n "$XDG_VTNR" ] && [ "$XDG_VTNR" -eq 1 ] ; then
     exec sway -V |& tee -a sway.log
+fi
+
+if [[ -n "$ZPROF" ]]; then
+    zprof
 fi
