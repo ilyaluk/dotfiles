@@ -42,8 +42,8 @@ button {
 
 #workspaces button {
     padding: 0 0;
-    padding-left: 7px;
-    padding-right: 9px;
+    padding-left: 9px;
+    padding-right: 11px;
     background-color: transparent;
     color: #ffffff;
 }
@@ -81,7 +81,7 @@ button {
 #idle_inhibitor,
 #scratchpad,
 #power-profiles-daemon,
-#mpd {
+#mpris {
     padding: 0 10px;
     color: #ffffff;
 }
@@ -205,6 +205,7 @@ label:focus {
 
 #custom-power {
     padding-left: 6px;
+    padding-right: 3px;
 }
 
 #custom-media {
@@ -251,20 +252,20 @@ label:focus {
     color: #2d3436;
 }
 
-#mpd {
+#mpris {
     background-color: #66cc99;
     color: #2a5c45;
 }
 
-#mpd.disconnected {
+#mpris.disconnected {
     background-color: #f53c3c;
 }
 
-#mpd.stopped {
+#mpris.stopped {
     background-color: #90b1b1;
 }
 
-#mpd.paused {
+#mpris.paused {
     background-color: #51a37a;
 }
 

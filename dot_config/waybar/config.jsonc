@@ -9,22 +9,21 @@
     "sway/scratchpad",
     "custom/media",
   ],
-  // "sway/window",
   // "modules-center": [],
   "modules-right": [
-    "mpd",
-    "idle_inhibitor",
-    "pulseaudio",
     // "network",
-    "power-profiles-daemon",
     //"cpu",
     //"memory",
     //"temperature",
-    "backlight",
-    "sway/language",
-    "battery",
-    "clock",
     "tray",
+
+    "mpris", // TODO
+    "sway/language",
+    "pulseaudio",
+    "battery",
+    "power-profiles-daemon", // TODO
+    "clock",
+    "idle_inhibitor",
     "custom/notification",
     "custom/power",
   ],
@@ -137,21 +136,18 @@
     "format": "{temperatureC}°C {icon}",
     "format-icons": ["", "", ""],
   },
-  "backlight": {
-    "format": "{percent}% {icon}",
-    "format-icons": ["", "", "", "", "", "", "", "", ""],
-  },
   "battery": {
     "states": {
       // "good": 95,
       "warning": 30,
       "critical": 15,
     },
-    "format": "{capacity}% {icon}",
-    "format-full": "{capacity}% {icon}",
-    "format-charging": "{capacity}% ",
-    "format-plugged": "{capacity}% ",
-    "format-alt": "{time} {icon}",
+    // TODO
+    "format": "{capacity}%",
+    "format-full": "{capacity}%",
+    "format-charging": "{capacity}%",
+    "format-plugged": "{capacity}%",
+    "format-alt": "{time}",
     // "format-good": "", // An empty format will hide the module
     // "format-full": "",
     "format-icons": ["", "", "", "", ""],
@@ -177,7 +173,7 @@
     "format-alt": "{ifname}: {ipaddr}/{cidr}",
   },
   "pulseaudio": {
-    // "scroll-step": 1, // %, can be a float
+    "scroll-step": 0, // %, can be a float
     "format": "{volume}% {icon} {format_source}",
     "format-bluetooth": "{volume}% {icon} {format_source}",
     "format-bluetooth-muted": "\udb81\udf5f {icon} {format_source}",
