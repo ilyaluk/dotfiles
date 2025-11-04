@@ -8,8 +8,8 @@
     "sway/mode",
     "sway/scratchpad",
     "custom/media",
-    "sway/window",
   ],
+  // "sway/window",
   // "modules-center": [],
   "modules-right": [
     "mpd",

@@ -242,6 +242,10 @@ bar swaybar_command waybar
 # changed only "indicator" from default
 client.focused #4c7899 #285577 #ffffff #29728A #285577
 
+# Titlebar style
+font JetBrainsMonoNerdFont 9
+titlebar_padding 4 1
+
 for_window [all] border pixel 1
 for_window [app_id="^foot$"] border pixel 2
 
