@@ -24,7 +24,7 @@ while read -r con_id; read -r app_id; do
     for tracked_app in "${!tracked_windows[@]}"; do
         if [ "$app_id" != "$tracked_app" ] && [ -n "${tracked_windows[$tracked_app]}" ]; then
             # Focus changed away from tracked app, kill it
-            swaymsg "[con_id=${tracked_windows[$tracked_app]}] kill" 2>/dev/null
+            swaymsg "[con_id=${tracked_windows[$tracked_app]}] kill" >& /dev/null
             unset tracked_windows["$tracked_app"]
         fi
     done

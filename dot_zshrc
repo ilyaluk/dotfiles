@@ -357,3 +357,7 @@ if [ ! -f "$SSH_AUTH_SOCK" ]; then
 fi
 
 # complete -o nospace -C /opt/homebrew/bin/terraform terraform
+
+if [ -z "$WAYLAND_DISPLAY" ] && [ -n "$XDG_VTNR" ] && [ "$XDG_VTNR" -eq 1 ] ; then
+    exec sway -V |& tee -a sway.log
+fi

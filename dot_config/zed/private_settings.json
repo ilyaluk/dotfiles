@@ -7,6 +7,27 @@
 // custom settings, run the `zed: Open Default Settings` command
 // from the command palette
 {
+  "title_bar": {
+    "show_branch_icon": false,
+    "show_branch_name": false,
+    "show_project_items": true,
+    "show_menus": false
+  },
+  "collaboration_panel": {
+    "button": false
+  },
+  "outline_panel": {
+    "folder_icons": true
+  },
+  "tabs": {
+    "file_icons": false
+  },
+  "search": {
+    "regex": true
+  },
+  "minimap": {
+    "show": "auto"
+  },
   "icon_theme": "Zed (Default)",
   "features": {
     "edit_prediction_provider": "copilot"
@@ -82,10 +103,12 @@
     "clangd": {}
   },
   "terminal": {
+    "max_scroll_history_lines": 50000,
     "dock": "bottom",
     "copy_on_select": true
   },
   "project_panel": {
+    "hide_root": true,
     "auto_fold_dirs": true
   },
   "preview_tabs": {
