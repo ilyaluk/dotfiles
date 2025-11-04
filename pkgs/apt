@@ -36,6 +36,7 @@ libpam-fprintd
 libva-drm2
 smartmontools
 tlp
+openvpn
 
 # boot stuff
 efitools
@@ -46,6 +47,7 @@ systemd-ukify
 tpm2-tools
 
 # UI apps
+calibre
 firefox-esr
 gimp
 keepassxc-full
@@ -71,8 +73,11 @@ pwgen
 python3.13-venv
 ranger
 rclone
+rsync
 scdoc
 screenfetch
+sshuttle
+tcpdump
 tree
 unzip
 whois
