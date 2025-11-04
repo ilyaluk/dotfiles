@@ -6,6 +6,5 @@ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flat
 
 # remove comments and join lines into a single line
 flatpak install flathub {{ include "pkgs/flatpak" | replaceAllRegex "^#.*\n" ""  | replace "\n" " " }}
-
-# TODO: upgrade
+flatpak update
 {{ end }}
