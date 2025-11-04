@@ -61,7 +61,7 @@
   "theme": {
     "mode": "system",
     "light": "Gruvbox Light",
-    "dark": "Gruvbox Dark"
+    "dark": "Gruvbox Dark Hard"
   },
   "languages": {
     "Markdown": {
