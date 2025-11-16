@@ -49,6 +49,8 @@ exec swayidle -w \
 
 ### XDG stuff for screencast/dark theme detection
 exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+# this is needed for correct portal behavior in flatpaks
+exec systemctl --user import-environment XDG_DATA_DIRS
 
 # background GUI services
 exec swaync
