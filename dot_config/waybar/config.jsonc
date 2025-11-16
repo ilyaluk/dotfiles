@@ -15,16 +15,17 @@
     //"cpu",
     //"memory",
     //"temperature",
-    "tray",
 
-    "mpris", // TODO
+    "mpris",
+    "privacy",
+    "tray",
     "sway/language",
     "pulseaudio",
     "battery",
     "power-profiles-daemon", // TODO
     "clock",
     "idle_inhibitor",
-    "custom/notification",
+    // "custom/notification",
     "custom/power",
   ],
 
@@ -36,19 +37,16 @@
     "window-format": "{name}",
     "window-rewrite-default": "\uf2d0",
     "window-rewrite": {
-      "class<firefox-esr>": "\udb80\ude39",
-      "class<thunderbird>": "\uf370",
+      "class<firefox-esr>": "\ue658",
+      "class<thunderbird>": "\uf42f",
       "class<org.chromium.Chromium>": "\udb80\udeaf",
-      "class<dev.zed.Zed>": "\udb84\udcd6",
-      "class<foot>": "\uea85",
+      "class<dev.zed.Zed>": "\udb84\udcf8",
+      "class<foot>": "\uf489",
       "class<launcher>": "\udb85\udcde",
-      "class<org.keepassxc.KeePassXC>": "\udb82\udcac",
-      "class<org.telegram.desktop>": "\ue215",
+      "class<org.keepassxc.KeePassXC>": "\udb80\udf06",
+      "class<org.telegram.desktop>": "\ue217",
       "class<Slack>": "\udb81\udcb1",
       "class<chrome-app.slack.com.*>": "\udb81\udcb1",
-
-      // TODO:
-      // signal
     },
     "format-icons": {
       "default": "",
@@ -163,14 +161,19 @@
       "power-saver": "",
     },
   },
-  "network": {
-    // "interface": "wlp2*", // (Optional) To force the use of this interface
-    "format-wifi": "{essid} ({signalStrength}%) ",
-    "format-ethernet": "{ipaddr}/{cidr} ",
-    "tooltip-format": "{ifname} via {gwaddr} ",
-    "format-linked": "{ifname} (No IP) ",
-    "format-disconnected": "Disconnected ⚠",
-    "format-alt": "{ifname}: {ipaddr}/{cidr}",
+  "mpris": {
+    "format": "{player_icon} {dynamic}",
+    "format-paused": "{status_icon} <i>{dynamic}</i>",
+    "dynamic-order": ["artist", "title", "position", "length"],
+    "title-len": 30,
+    "artist-len": 15,
+    "player-icons": {
+      "default": "\udb81\udc0a",
+      // "mpv": "🎵",
+    },
+    "status-icons": {
+      "paused": "\udb80\udfe4",
+    },
   },
   "pulseaudio": {
     "scroll-step": 0, // %, can be a float

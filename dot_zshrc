@@ -317,6 +317,8 @@ compdef _aws_add_ssh_key aws_add_ssh_key
 # use zed binary, not zsh function
 unfunction zed
 
+alias dquilt="quilt --quiltrc=${HOME}/.quiltrc-dpkg"
+
 # ================================================
 # Expand .... to ../../.. in the command line
 function expand-dots() {
@@ -360,10 +362,6 @@ if [ ! -f "$SSH_AUTH_SOCK" ]; then
 fi
 
 # complete -o nospace -C /opt/homebrew/bin/terraform terraform
-
-if [ -z "$WAYLAND_DISPLAY" ] && [ -n "$XDG_VTNR" ] && [ "$XDG_VTNR" -eq 1 ] ; then
-    exec sway -V |& tee -a sway.log
-fi
 
 if [[ -n "$ZPROF" ]]; then
     zprof

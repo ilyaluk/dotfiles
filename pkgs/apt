@@ -14,6 +14,7 @@ iwgtk
 libglib2.0-bin
 libinput-tools
 pavucontrol
+ssh-askpass-gnome
 sway
 sway-notification-center
 swayidle
@@ -26,6 +27,7 @@ xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-desktop-portal-wlr
 wob
+playerctl
 
 # root stuff
 caddy
@@ -40,6 +42,8 @@ linux-image-amd64/trixie-backports
 smartmontools
 tlp
 openvpn
+greetd
+wlgreet
 
 # boot stuff
 efitools
@@ -87,7 +91,6 @@ rclone
 rsync
 scdoc
 screenfetch
-ssh-askpass-gnome
 sshuttle
 tcpdump
 tree
