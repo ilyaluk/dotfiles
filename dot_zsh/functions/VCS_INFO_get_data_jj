@@ -3,18 +3,136 @@
 ## Distributed under the same BSD-ish license as zsh itself.
 
 setopt localoptions extendedglob NO_shwordsplit
-local jj_work_change_id jj_info
 
-jj_work_change_id=$( jj show @ --no-patch --config 'templates.show="change_id.shortest(12).prefix()"' )
-jj_work_change_info=$( jj show @ --no-patch --config 'templates.show="format_commit_summary_with_refs(self, bookmarks)"' )
+### heavily based on https://andre.arko.net/2025/06/20/a-jj-prompt-for-powerlevel10k/
 
-jj_info=""
-[[ "$jj_work_change_info" == *"(conflict)"* ]] && jj_info="${jj_info}conflict "
-[[ "$jj_work_change_info" == *"(empty)"* ]] && jj_info="${jj_info}empty "
-[[ "$jj_work_change_info" == *"(no description set)"* ]] && jj_info="${jj_info}nodesc "
+# jj prompt table of contents:
+# ----------------------------
+# jj_add     | add changes to jj for this prompt   | (no output)
+# jj_at      | bookmark name and distance from @   | main›1
+# jj_remote  | count changes ahead/behind remote   | 2⇡1⇣
+# jj_change  | the current jj change ID            | kkor
+# jj_desc    | current change description          | first line of description (or  )
+# jj_status  | counts of added, removed, modified  | +1 -4 ^2
+local grey='%244F'
+local green='%2F'
+local blue='%39F'
+local red='%196F'
+local yellow='%3F'
+local cyan='%6F'
+local magenta='%5F'
 
-jj_info="${jj_info%?}"
-[[ "${jj_info}" == "empty nodesc" ]] && jj_info="new"
+# snapshot once, and ignore working copy changes for all commands for speed
+jj --at-operation=@ debug snapshot
 
-VCS_INFO_formats "${jj_info}" "${jj_work_change_id}" "" "" "" "${jj_work_change_id}" ""
+## jj_at
+local branch=$(jj --ignore-working-copy --at-op=@ --no-pager log --no-graph --limit 1 -r "
+    coalesce(
+        heads(::@ & (bookmarks() | remote_bookmarks() | tags())),
+        heads(@:: & (bookmarks() | remote_bookmarks() | tags())),
+        trunk()
+    )" -T "separate(' ', bookmarks, tags)" 2> /dev/null | cut -d ' ' -f 1)
+if [[ -n $branch ]]; then
+    [[ $branch =~ "\*$" ]] && branch=${branch::-1}
+
+    local VCS_STATUS_COMMITS_AFTER=$(jj --ignore-working-copy --at-op=@ --no-pager log --no-graph -r "$branch..@ & (~empty() | merges())" -T '"n"' 2> /dev/null | wc -c | tr -d ' ')
+    local VCS_STATUS_COMMITS_BEFORE=$(jj --ignore-working-copy --at-op=@ --no-pager log --no-graph -r "@..$branch & (~empty() | merges())" -T '"n"' 2> /dev/null | wc -c | tr -d ' ')
+    local counts=($(jj --ignore-working-copy --at-op=@ --no-pager bookmark list -r $branch -T '
+    if(remote,
+        separate(" ",
+        name ++ "@" ++ remote,
+        coalesce(tracking_ahead_count.exact(), tracking_ahead_count.lower()),
+        coalesce(tracking_behind_count.exact(), tracking_behind_count.lower()),
+        if(tracking_ahead_count.exact(), "0", "+"),
+        if(tracking_behind_count.exact(), "0", "+"),
+        ) ++ "\n"
+    )
+    '))
+
+    local VCS_STATUS_LOCAL_BRANCH=$branch
+    local VCS_STATUS_COMMITS_AHEAD=$counts[2]
+    local VCS_STATUS_COMMITS_BEHIND=$counts[3]
+    local VCS_STATUS_COMMITS_AHEAD_PLUS=$counts[4]
+    local VCS_STATUS_COMMITS_BEHIND_PLUS=$counts[5]
+fi
+
+local status_color=${green}
+(( VCS_STATUS_COMMITS_AHEAD )) && status_color=${cyan}
+(( VCS_STATUS_COMMITS_BEHIND )) && status_color=${magenta}
+(( VCS_STATUS_COMMITS_AHEAD && VCS_STATUS_COMMITS_BEHIND )) && status_color=${red}
+
+local res
+local where=${(V)VCS_STATUS_LOCAL_BRANCH}
+# If local branch name or tag is at most 32 characters long, show it in full.
+# Otherwise show the first 12 … the last 12.
+(( $#where > 32 )) && where[13,-13]="…"
+res+="${status_color}${where//\%/%%}"  # escape %
+
+# ‹42 if before the local bookmark
+(( VCS_STATUS_COMMITS_BEFORE )) && res+="‹${VCS_STATUS_COMMITS_BEFORE}"
+# ›42 if beyond the local bookmark
+(( VCS_STATUS_COMMITS_AFTER )) && res+="›${VCS_STATUS_COMMITS_AFTER}"
+
+## jj_remote
+# # ⇣42 if behind the remote.
+# (( VCS_STATUS_COMMITS_BEHIND )) && res+=" ${green}⇣${VCS_STATUS_COMMITS_BEHIND}"
+# (( VCS_STATUS_COMMITS_BEHIND_PLUS )) && res+="${VCS_STATUS_COMMITS_BEHIND_PLUS}"
+# # ⇡42 if ahead of the remote; no leading space if also behind the remote: ⇣42⇡42.
+# (( VCS_STATUS_COMMITS_AHEAD && !VCS_STATUS_COMMITS_BEHIND )) && res+=" "
+# (( VCS_STATUS_COMMITS_AHEAD  )) && res+="${green}⇡${VCS_STATUS_COMMITS_AHEAD}"
+# (( VCS_STATUS_COMMITS_AHEAD_PLUS )) && res+="${VCS_STATUS_COMMITS_AHEAD_PLUS}"
+
+# we need placeholders (__NONE__) because jj 'separate' skips empty fields
+local jj_output="$(jj --ignore-working-copy --at-op=@ --no-pager log --no-graph --limit 1 -r "@" -T '
+    separate("\0",
+        change_id.shortest(4).prefix(), coalesce(change_id.shortest(4).rest(), "__NONE__"),
+        commit_id.shortest(4).prefix(), coalesce(commit_id.shortest(4).rest(), "__NONE__"),
+        concat(
+            if(conflict, "💥"),
+            if(divergent, "🚧"),
+            if(hidden, "👻"),
+            if(immutable, "🔒"),
+            if(description.first_line() == "" && !empty, " "),
+            "__NONE__",
+        ),
+        diff.summary(),
+    )'
+)"
+jj_output="${jj_output//__NONE__/}"  # remove placeholders
+local change=("${(@0)jj_output}")
+local VCS_STATUS_CHANGE=($change[1] $change[2])
+local VCS_STATUS_COMMIT=($change[3] $change[4])
+local VCS_STATUS_ACTION=$change[5]
+#local VCS_STATUS_MESSAGE="${change[6]}"
+local VCS_STATUS_CHANGES=($(echo "${change[6]}" | awk 'BEGIN {a=0;d=0;m=0} /^A / {a++} /^D / {d++} /^M / {m++} /^R / {m++} /^C / {a++} END {print(a,d,m)}'))
+
+## jj_change
+
+# 'zyxw' with the standard jj color coding for shortest name
+res+=" ${magenta}${VCS_STATUS_CHANGE[1]}${grey}${VCS_STATUS_CHANGE[2]}"
+# '💥🚧👻🔒' if the repo is in an unusual state.
+[[ -n $VCS_STATUS_ACTION ]] && res+=" ${red}${VCS_STATUS_ACTION}"
+# # '123abc' with the standard jj color coding for shortest name
+# res+=" ${blue}${VCS_STATUS_COMMIT[1]}${grey}${VCS_STATUS_COMMIT[2]}"
+
+## jj_desc
+# [[ -n $VCS_STATUS_MESSAGE ]] && res+=" ${green}${VCS_STATUS_MESSAGE}"
+
+## jj_status
+(( VCS_STATUS_CHANGES[1] + VCS_STATUS_CHANGES[2] + VCS_STATUS_CHANGES[3] )) && res+=" "
+(( VCS_STATUS_CHANGES[1] )) && res+="%F{green}+${VCS_STATUS_CHANGES[1]}"
+(( VCS_STATUS_CHANGES[2] )) && res+="%F{red}-${VCS_STATUS_CHANGES[2]}"
+(( VCS_STATUS_CHANGES[3] )) && res+="${yellow}^${VCS_STATUS_CHANGES[3]}"
+
+## VCS_INFO_formats description (for backend authors):
+#   action:   a string that signals a certain non-default condition in the
+#             repository (like 'rebase-i' in git). If this in non-empty,
+#             the actionformats will be used, too.
+#   branch:   the name of the currently checked out branch.
+#   base:     the full name of the repository's root directory.
+#   staged:   non-empty if the repository contains staged changes.
+#   unstaged: non-empty if the repository contains unstaged changes.
+#   revision: an identifier of the currently checked out revision.
+#   misc:     a string that may contain anything the backend author likes.
+VCS_INFO_formats "" "" "" "" "" "" "${res}%f"
 return 0

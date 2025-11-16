@@ -4,6 +4,7 @@ email = "ilya@luk.moe"
 
 [ui]
 default-command = "st"
+movement.edit = true
 #show-cryptographic-signatures = true
 
 [signing]

@@ -119,6 +119,11 @@ function prompt_kube_ctx () {
 }
 grml_theme_add_token kube_ctx -f prompt_kube_ctx '%F{magenta}' '%f'
 
+zstyle ':vcs_info:*' enable jj git svn
+# expand to "misc" template for jj backend, see .zsh/functions/VCS_INFO_get_data_jj
+zstyle ':vcs_info:jj:*' formats '[%m] '
+zstyle ':vcs_info:jj:*' actionformats '[%m] '
+
 ZSH_HIGHLIGHT_STYLES[comment]=fg=blue
 zstyle :compinstall filename "$USER/.zshrc"
 zstyle ':prompt:grml:right:setup' items ''
@@ -213,13 +218,14 @@ alias reflect='zenta reflect'
 
 alias j=jj
 alias jl='jj log'
-alias jn='jj new'
+alias jn='jj next || jj new'
+alias jp='jj prev'
 alias je='jj edit'
 alias js='jj squash'
-alias jp='jj git push'
 alias jz='jj z'
 alias jza='jj za'
 alias jsp='jj squash && jj git push'
+alias jgp='jj git push'
 alias jgf='jj git fetch'
 alias jbm='jj tug'
 alias jbmp="jj tug && jj git push"
