@@ -128,8 +128,14 @@ input "1739:53160:SYNA802E:00_06CB:CFA8_Touchpad" {
     bindsym --to-code $mod+Shift+q kill
 
     # Start your launcher
-    bindsym --to-code $mod+d input type:keyboard xkb_switch_layout 0; exec \
-        TERMINAL_COMMAND="$term -e " $term -a launcher sway-launcher-desktop.sh
+    set $launcher_lock /tmp/sway_launcher_desktop.lock
+    bindsym --to-code $mod+d input type:keyboard xkb_switch_layout 0; exec '\
+        [ -f "$launcher_lock" ] && exit 1; \
+        touch "$launcher_lock"; \
+        trap "rm -f $launcher_lock" EXIT; \
+        TERMINAL_COMMAND="$term -e " $term -a launcher sway-launcher-desktop.sh; \
+        rm -f "$launcher_lock"; \
+        '
 
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
@@ -315,14 +321,16 @@ for_window [app_id="^dev.zed.Zed$"] move container to workspace 2, workspace 2
 for_window [app_id="^org.telegram.desktop"] title_format "Telegram", move container to workspace 3, workspace 3, layout tabbed
 for_window [app_id="^(Slack|chrome-app.slack.com.*)$"] title_format "Slack", move container to workspace 3, workspace 3, layout tabbed
 for_window [app_id="^thunderbird$"] move container to workspace 5, workspace 5
-for_window [app_id="^org.keepassxc.KeePassXC$"] move container to workspace 6, workspace 6
+for_window [app_id="^org.keepassxc.KeePassXC$" title="^KeePass - KeePassXC$"] move container to workspace 6, workspace 6
 
 # Dialogs
 for_window [window_type="dialog"] floating enable
 for_window [window_role="dialog"] floating enable
 
-for_window [title="^Picture-in-Picture$"] floating enable, sticky enable
 for_window [title="^KeePassXC -  Access Request$"] floating enable, sticky enable
+for_window [title="^Unlock Database - KeePassXC$"] floating enable, sticky enable
+
+for_window [title="^Picture-in-Picture$"] floating enable, sticky enable
 for_window [app_id="^io.github.slgobinath.SafeEyes$"] floating enable, sticky enable
 for_window [app_id="^it.mijorus.smile$"] floating enable, sticky enable, border pixel 0
 

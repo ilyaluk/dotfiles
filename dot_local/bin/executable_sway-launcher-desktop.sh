@@ -310,11 +310,7 @@ echo "Starting launcher instance with the following providers:" "${!PROVIDERS[@]
 FZFPIPE=$(mktemp -u)
 mkfifo "$FZFPIPE"
 
-LOCK_FILE=/tmp/sway_launcher_desktop.lock
-[ -f "$LOCK_FILE" ] && exit 1
-touch "$LOCK_FILE"
-
-trap 'rm "$FZFPIPE" "$LOCK_FILE"' EXIT INT
+trap 'rm "$FZFPIPE"' EXIT INT
 
 # Append Launcher History, removing usage count
 (printf '%s' "${HIST_LINES[@]#* }" >>"$FZFPIPE") &
