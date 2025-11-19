@@ -73,6 +73,14 @@
   "tray": {
     // "icon-size": 21,
     "spacing": 10,
+    "orders": {
+      "org.twosheds.iwgtk": -20,
+      "blueman": -10,
+      // tailscale systray id is systray_${pid}, current patch only supports fixed names,
+      // hence everything before is negative order, and everything after is positive order
+      "KeePassXC": 30,
+      "io.github.slgobinath.SafeEyes": 40,
+    },
   },
   "clock": {
     "format": "{:%a %d.%m %H:%M}",
