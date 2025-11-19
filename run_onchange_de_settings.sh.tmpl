@@ -1,0 +1,8 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/zsh
+set -ex
+
+gsettings set org.gnome.desktop.interface gtk-enable-primary-paste false
+xdg-mime default firefox.desktop x-scheme-handler/http
+xdg-mime default firefox.desktop x-scheme-handler/https
+{{ end }}
