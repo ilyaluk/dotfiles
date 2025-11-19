@@ -5,6 +5,7 @@ KILL_ON_UNFOCUS_ARRAY=(
     "blueman-manager"
     "org.twosheds.iwgtk"
     "org.pulseaudio.pavucontrol"
+    "org.keepassxc.KeePassXC"
     "it.mijorus.smile"
 )
 KILL_ON_UNFOCUS=$(IFS='|'; echo "${KILL_ON_UNFOCUS_ARRAY[*]}")
