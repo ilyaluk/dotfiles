@@ -361,6 +361,14 @@ if [ ! -f "$SSH_AUTH_SOCK" ]; then
     source "$XDG_RUNTIME_DIR/ssh-agent.env" >/dev/null
 fi
 
+if [ -z "$(ssh-add -l 2>/dev/null | grep -v 'The agent has no identities')" ]; then
+    echo "ssh agent has no identities, adding all keys from ~/.ssh/"
+    for key in ~/.ssh/id_*; do
+        [[ "$key" == *.pub ]] && continue
+        [[ -f "$key" ]] && ssh-add "$key" 2>/dev/null
+    done
+fi
+
 # complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
 if [[ -n "$ZPROF" ]]; then
