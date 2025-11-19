@@ -45,7 +45,7 @@
     },
     "single_file_review": true,
     "always_allow_tool_actions": false,
-    "default_profile": "write",
+    "default_profile": "{{ output "sh" "-c" "cat ~/.config/zed/settings.json || echo '{\"agent\":{\"default_profile\":\"\"} }'" | fromJsonc | jq ".agent.default_profile" | first }}",
     "profiles": {},
     "default_model": {
       "provider": "anthropic",
