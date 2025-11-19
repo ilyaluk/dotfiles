@@ -331,12 +331,7 @@ for_window [app_id="^it.mijorus.smile$"] floating enable, sticky enable, border 
 
 for_window [app_id="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
 
-# make all KeePassXC windows as dialogs, but additionally pin main window to top right
-for_window [app_id="^org.keepassxc.KeePassXC$"] \
-    floating enable, sticky enable
-for_window [app_id="^org.keepassxc.KeePassXC$" title="^KeePass.+ KeePassXC$"] \
-    resize set 800 634, move position 640 0
-
+for_window [app_id="^org.keepassxc.KeePassXC$"] floating enable, sticky enable, resize set 800 634, move position 640 0
 for_window [app_id="^org.twosheds.iwgtk$"] floating enable, sticky enable, resize set 38 ppt 634, move position 62 ppt 0
 for_window [app_id="^iwgtk$"] floating enable, sticky enable   # pasword dialog
 for_window [app_id="^blueman-manager$"] floating enable, sticky enable, resize set 38 ppt 634, move position 62 ppt 0
