@@ -138,6 +138,12 @@ if [ -n "$out" ]; then
   jj new "$out"
 fi
 """, ""]
+zt = ["util", "exec", "--", "sh", "-c", """
+out=$(jj bookmark list -a -T 'separate("@", name, remote) ++ "\n"' 2> /dev/null | grep -v '@git$' | grep '@' | sort | uniq | fzf | head -n1)
+if [ -n "$out" ]; then
+  jj bookmark track "$out" && jj new "$out"
+fi
+""", ""]
 
 [fix.tools.tf-fmt]
 command = ["terraform", "fmt", "-"]
