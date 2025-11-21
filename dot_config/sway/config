@@ -42,11 +42,13 @@ output "*" {
 
 ### exec stuff
 
+set $lock 'loginctl lock-session && swaylock'
+
 ### Idle configuration
 exec swayidle -w \
-    timeout 120 'swaylock' \
+    timeout 120 '$lock' \
     timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-    before-sleep 'swaylock'
+    before-sleep '$lock'
 
 # this is needed for correct dir order in telegram, use firefox and not chromium for links
 exec systemctl --user import-environment XDG_DATA_DIRS
@@ -62,13 +64,11 @@ exec blueman-applet
 
 # kill tailscale to avoid multiple instances
 # tailscaled won't be killed, it's running as root
-# add sleep to put icon after blueman (it takes 1-2 secs to appear)
-# TODO: better icon ordering in waybar, will require patch
-exec_always 'pkill tailscale; sleep 2.5; tailscale systray'
+exec_always 'pkill tailscale; tailscale systray'
 
 # exec_always is used because safeeyes can't handle config reload
 # add some sleep, otherwise safeeyes won't detect tray
-exec_always 'sleep 3; pkill safeeyes; /var/lib/flatpak/exports/bin/io.github.slgobinath.SafeEyes'
+exec_always 'pkill safeeyes; sleep 3; /var/lib/flatpak/exports/bin/io.github.slgobinath.SafeEyes'
 
 exec sway-kill-dialogs-on-unfocus.sh
 
@@ -260,7 +260,7 @@ bindsym --to-code $mod+r mode "resize"
 #
 # Utilities:
 #
-    bindsym --to-code Ctrl+Alt+q exec swaylock
+    bindsym --to-code Ctrl+Alt+q exec $lock
     bindsym --to-code Ctrl+Alt+Space exec it.mijorus.smile
 
     bindsym --to-code $mod+Shift+n exec swaync-client -t -sw
@@ -315,7 +315,6 @@ for_window [app_id="^foot$"] border pixel 2
 
 # Per-app configs
 for_window [app_id="^firefox-esr$"] move container to workspace 1, workspace 1
-for_window [app_id="^org.chromium.Chromium$"] move container to workspace 1, workspace 1
 for_window [app_id="^dev.zed.Zed$"] move container to workspace 2, workspace 2
 for_window [app_id="^org.telegram.desktop"] title_format "Telegram", move container to workspace 3, workspace 3, layout tabbed
 for_window [app_id="^(Slack|chrome-app.slack.com.*)$"] title_format "Slack", move container to workspace 3, workspace 3, layout tabbed
@@ -328,6 +327,7 @@ for_window [window_role="dialog"] floating enable
 for_window [title="^Picture-in-Picture$"] floating enable, sticky enable
 for_window [app_id="^io.github.slgobinath.SafeEyes$"] floating enable, sticky enable
 for_window [app_id="^it.mijorus.smile$"] floating enable, sticky enable, border pixel 0
+for_window [app_id="^mpv$"] floating enable, sticky enable
 
 for_window [app_id="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
 
@@ -336,3 +336,6 @@ for_window [app_id="^org.twosheds.iwgtk$"] floating enable, sticky enable, resiz
 for_window [app_id="^iwgtk$"] floating enable, sticky enable   # pasword dialog
 for_window [app_id="^blueman-manager$"] floating enable, sticky enable, resize set 38 ppt 634, move position 62 ppt 0
 for_window [app_id="^org.pulseaudio.pavucontrol$"] floating enable, sticky enable, resize set 50 ppt 634, move position 50 ppt 0
+
+# video stuff
+for_window [all] inhibit_idle fullscreen
