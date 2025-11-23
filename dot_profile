@@ -1,0 +1,7 @@
+# greetd loads these with dash, so keep it POSIX compliant
+PATH="/usr/local/bin:/usr/bin:/bin"
+PATH="$PATH:/usr/sbin:/sbin"
+PATH="$PATH:$HOME/.local/bin"
+PATH="$PATH:$HOME/.local/share/mise/shims"
+PATH="$PATH:/var/lib/flatpak/exports/bin"
+export PATH
