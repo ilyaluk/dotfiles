@@ -2,69 +2,26 @@ if [[ -n "$ZPROF" ]]; then
     zmodload zsh/zprof
 fi
 
-# ================================================
-# Various paths
-export HOMEBREW_PREFIX="/opt/homebrew"
-export HOMEBREW_CELLAR="/opt/homebrew/Cellar"
-export HOMEBREW_REPOSITORY="/opt/homebrew"
-
-paths=(
-    "/usr/bin"
-    "/bin"
-    "/usr/sbin"
-    "/sbin"
-    "/Library/Apple/usr/bin"
-    "/usr/local/bin"
-    "$HOMEBREW_PREFIX/bin"
-    "$HOMEBREW_PREFIX/sbin"
-    "$HOMEBREW_PREFIX/opt/libpq/bin"
-    "$HOMEBREW_PREFIX/share/google-cloud-sdk/path.zsh.inc"
-    "/Applications/Wireshark.app/Contents/MacOS"
-    "/Applications/Tailscale.app/Contents/MacOS"
-    "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
-    "$HOME/go/bin"
-    "$HOME/.local/bin"
-    "$HOME/.cargo/bin"
-    "$HOME/.pyenv/bin"
-    "$HOME/.foundry/bin"
-    "$HOME/Library/Python/3.7/bin"
-    "$HOME/Library/Python/3.8/bin"
-    "$HOME/Library/Python/3.9/bin"
-    "$HOME/Library/Python/3.10/bin"
-    "$HOME/Library/Python/3.11/bin"
-    "$HOME/Library/Python/3.12/bin"
-    "$HOME/Library/pnpm"
-    "/var/lib/flatpak/exports/bin"
-)
-export PATH=$(IFS=:; echo "${paths[*]}")
+source ~/.profile
 
 # enable zsh completion
 fpath=(
-    $HOMEBREW_PREFIX/share/zsh/site-functions
     $HOME/.zsh/functions
     $fpath
 )
-
-export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH+:$MANPATH}:"
-export INFOPATH="$HOMEBREW_PREFIX/share/info:${INFOPATH:-}"
-
-export GOPATH="$HOME/go"
 
 export XDG_DATA_DIRS="/usr/local/share:/usr/share:/var/lib/flatpak/exports/share:/home/ilya/.local/share/flatpak/exports/share"
 
 # activate mise for all mise-managed binaries
 # TODO: this command takes ~20ms, look into ways to source from file
-source <(mise activate)
+#source <(mise activate)
 
 # ================================================
 # Apps config
 export GIT_TERMINAL_PROMPT=1
 export LESS="RSXF"
 export TG_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
-export TENV_DETACHED_PROXY=true
 export LIMA_SHELL=zsh
-# sometimes Python under Ansible crashes unexpectedly without this
-export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 # disable auto-title from grml-zsh-config
 export NOTITLE=1
@@ -73,8 +30,6 @@ export NOTITLE=1
 # Includes
 source ~/.zsh/grml_rc
 
-#source $HOMEBREW_PREFIX/Cellar/fzf/*/shell/key-bindings.zsh
-#source $HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/share/doc/fzf/examples/key-bindings.zsh
 source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # ================================================
@@ -107,13 +62,8 @@ function prompt_kube_ctx () {
     REPLY=""
     [[ ! -f ~/.kube/config ]] && return
     # it's faster by couple of dozen of ms than kubectl config current-context
-    ctx=$(cat ~/.kube/config | grep current-context | cut -d' ' -f2)
+    ctx=$(grep current-context ~/.kube/config | cut -d' ' -f2)
     if [[ -n "$ctx" ]]; then
-        # here it's easier than manually parsing the config, and slowing down only when context is set
-        ns=$(kubectl config view --minify -o jsonpath='{..namespace}')
-        if [[ -n "$ns" ]]; then
-            ctx="$ctx:$ns"
-        fi
         REPLY="☸ ${ctx:t} "
     fi
 }
@@ -139,8 +89,8 @@ bindkey "^[[1;1D" backward-word
 bindkey "^[[1;9C" forward-word
 bindkey "^[[1;9D" backward-word
 
-autoload -U +X bashcompinit && bashcompinit
-autoload -U compinit && compinit
+# autoload -U +X bashcompinit && bashcompinit
+# autoload -U compinit && compinit
 
 # ================================================
 # misc autocompletes
@@ -208,13 +158,8 @@ alias sus='sort | uniq -c | sort'
 alias awsp='export AWS_PROFILE=$(cat ~/.aws/config | grep "^\[profile" | cut -d" " -f2- | tr -d "\]" | fzf)'
 alias awsup='unset AWS_PROFILE'
 alias awsl='aws sso login'
-alias docl="aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_ACCOUNT_NUM.dkr.ecr.eu-central-1.amazonaws.com"
 
 alias ghprv='gh pr view --web $(jj bookmark list -r "heads(::@- & bookmarks())" -T name)'
-
-alias breath='zenta now --quick'
-alias breathe='zenta now'
-alias reflect='zenta reflect'
 
 alias j=jj
 alias jl='jj log'
@@ -229,91 +174,52 @@ alias jsp='jj squash && jj git push'
 alias jgp='jj git push'
 alias jgf='jj git fetch'
 alias jbm='jj tug'
-alias jbmp="jj tug && jj git push"
+alias jbmp='jj tug && jj git push'
 alias ju='jjui'
 
 function jm() {
-	bookmark=master
-	if [[ -n $(jj bookmark list main) ]]; then bookmark=main; fi
-	jj git fetch
-	jj new $bookmark
+    bookmark=master
+    if [[ -n $(jj bookmark list main) ]]; then bookmark=main; fi
+    jj git fetch
+    jj new $bookmark
 }
 
 function llm_desc() {
     local change_ref="${1:-@}"
-	(jj show --stat "$change_ref"; jj diff --git -r "$change_ref") | \
-		llm -m claude-4-sonnet -s 'Generate git commit title and description based on provided change description and git-formatted diff. Include ticket number if it is present in the input. Use existing text desctiption (if provided) as a arefernce. Be succint. Describe changes as list, prepend each item with "- ". Output _only_ title, newline, message.' | \
-		jj desc --stdin "$change_ref"
-	# edit manually right after
-	jj desc "$change_ref"
+    (jj show --stat "$change_ref"; jj diff --git -r "$change_ref") | \
+        llm -m claude-4-sonnet -s 'Generate git commit title and description based on provided change description and git-formatted diff. Include ticket number if it is present in the input. Use existing text desctiption (if provided) as a arefernce. Be succint. Describe changes as list, prepend each item with "- ". Output _only_ title, newline, message.' | \
+        jj desc --stdin "$change_ref"
+    # edit manually right after
+    jj desc "$change_ref"
 }
 
 function newpr() {
-	change_id=$1
-	if [[ -z $change_id ]]; then
-		if ! jj show @ --no-patch --config 'templates.show="format_commit_summary_with_refs(self, bookmarks)"' | grep '(empty)' > /dev/null; then
-			jj commit
-		fi
-		change_id="@-"
-	fi
-	base=$(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph | cut -d' ' -f1)
-	echo "Generating suggested branch name..."
-	suggest=$(jj log -r "${base}..@" --patch | llm -m claude-4-sonnet -s 'Generate a short git branch name based on the log and patches. Use following format: "{user}/{ticket-}{name}". User should be short name. If none of commits have ticket refence, dont include it. Output _only_ branch name.')
-	echo "Enter branch name. Empty to auto-generate. LLM suggested: $suggest"
-	read branch_name
-	if [[ -n "$branch_name" ]]; then
-	    jj bookmark create "$branch_name" -r "$change_id"
-	    jj git push -b "$branch_name" --allow-new
-	else
-	    jj git push -c "$change_id"
-	fi
-	head=$(jj log -r "$change_id" -T bookmarks --no-graph)
-	gh pr create -H $head -B $base
-	ghprv
-}
-
-function aws_add_ssh_key() {
-    instance_id="$(ssh -G "$1" | grep '^hostname '  | cut -d' ' -f2)"
-    profile="$(ssh -G "$1" | grep -oE -- '--profile [^ ]+' | cut -d' ' -f2)"
-    region="$(ssh -G "$1" | grep -oE -- '--region [^ ]+' | cut -d' ' -f2)"
-    if [ -z "$region" ]; then
-        region="us-east-2"
-    fi
-
-    key_path="${2:-}"
-    if [ -z "$key_path" ]; then
-        if [ -f ~/.ssh/id_ed25519.pub ]; then
-            key_path=~/.ssh/id_ed25519.pub
-        elif [ -f ~/.ssh/id_rsa.pub ]; then
-            key_path=~/.ssh/id_rsa.pub
-        else
-            echo "No pubkey found in ~/.ssh/{id_ed25519.pub,id_rsa.pub}, specify one as the second argument"
-            return
+    change_id=$1
+    if [[ -z $change_id ]]; then
+        if [ $(jj show @ -T empty --no-patch) = false ]; then
+            jj commit
         fi
+        change_id="@-"
     fi
-
-    ssh_key="$( <"$key_path" )"
-    remote_auth_keys="/home/ubuntu/.ssh/authorized_keys"
-
-    command_id=$(aws --region "$region" --profile "$profile" ssm send-command \
-        --document-name "AWS-RunShellScript" \
-        --parameters "commands=[\"grep -q '${ssh_key}' ${remote_auth_keys} || echo '${ssh_key}' >> ${remote_auth_keys}\"]" \
-        --instance-ids "[\"$instance_id\"]" \
-        --output text \
-        --query "Command.CommandId")
-
-    sleep 0.5
-
-    aws --region "$region" --profile "$profile" ssm list-command-invocations \
-        --command-id "$command_id" --details \
-        --output text \
-        --query "CommandInvocations[].CommandPlugins[].Status"
+    base=$(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph | cut -d' ' -f1)
+    branch=$(jj log -r "${change_id} & bookmarks()" -T bookmarks --no-graph)
+    if [[ -z "$branch" ]]; then
+        echo "Generating suggested branch name..."
+        suggest=$(jj log -r "${base}..@" --patch | \
+            llm -m claude-4-sonnet -s 'Generate a short git branch name based on the log and patches. Use following format: "{user}/{ticket-}{name}". User should be short name. If none of commits have ticket refence, dont include it. Output _only_ branch name.')
+        echo "Enter branch name. Empty to auto-generate. LLM suggested: $suggest"
+        read branch
+        [[ -n "$branch" ]] && jj bookmark create "$branch" -r "$change_id"
+    fi
+    if [[ -n "$branch" ]]; then
+        jj git push -b "$branch" --allow-new
+    else
+        jj git push -c "$change_id"
+    fi
+    head=$(jj log -r "$change_id" -T bookmarks --no-graph)
+    gh pr create -H $head -B $base
+    ghprv
 }
-
-function _aws_add_ssh_key() {
-    _arguments '1:remote host:_ssh_hosts' '2:key path:_files'
-}
-compdef _aws_add_ssh_key aws_add_ssh_key
 
 # use zed binary, not zsh function
 unfunction zed
@@ -345,16 +251,6 @@ zle -N expand-dots-then-accept-line
 bindkey '^I' expand-dots-then-expand-or-complete
 bindkey '^M' expand-dots-then-accept-line
 
-# . "$HOME/.grit/bin/env"
-
-# pnpm
-export PNPM_HOME="/Users/ilyaluk/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
-
 if ! pgrep ssh-agent > /dev/null; then
     ssh-agent -t 12h > "$XDG_RUNTIME_DIR/ssh-agent.env"
 fi
@@ -369,8 +265,6 @@ if [ -z "$(ssh-add -l 2>/dev/null | grep -v 'The agent has no identities')" ]; t
         [[ -f "$key" ]] && ssh-add "$key" 2>/dev/null
     done
 fi
-
-# complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
 if [[ -n "$ZPROF" ]]; then
     zprof
