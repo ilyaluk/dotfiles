@@ -25,6 +25,18 @@ local magenta='%5F'
 # snapshot once, and ignore working copy changes for all commands for speed
 jj --at-operation=@ debug snapshot
 
+local op_id=$(jj op show -T 'id' --no-op-diff)
+
+# Truncate op_id to 16 chars, it's 128 char hash
+op_id=${op_id:0:16}
+
+# Check if cached prompt exists
+local cache_file="${vcs_comm[basedir]}/.jj/prompt_cache/${op_id}"
+if [[ -f "$cache_file" ]]; then
+    VCS_INFO_formats "" "" "" "" "" "" "$(cat $cache_file)"
+    return 0
+fi
+
 ## jj_at
 local branch=$(jj --ignore-working-copy --at-op=@ --no-pager log --no-graph --limit 1 -r "
     coalesce(
@@ -124,6 +136,16 @@ res+=" ${magenta}${VCS_STATUS_CHANGE[1]}${grey}${VCS_STATUS_CHANGE[2]}"
 (( VCS_STATUS_CHANGES[2] )) && res+="%F{red}-${VCS_STATUS_CHANGES[2]}"
 (( VCS_STATUS_CHANGES[3] )) && res+="${yellow}^${VCS_STATUS_CHANGES[3]}"
 
+res+="%f"  # reset color
+
+# Cache the prompt
+if [[ ! -d "${vcs_comm[basedir]}/.jj/prompt_cache" ]]; then
+    mkdir -p "${vcs_comm[basedir]}/.jj/prompt_cache"
+fi
+echo -n "${res}" > "$cache_file"
+
+# TODO: cache should be cleared time to time
+
 ## VCS_INFO_formats description (for backend authors):
 #   action:   a string that signals a certain non-default condition in the
 #             repository (like 'rebase-i' in git). If this in non-empty,
@@ -134,5 +156,5 @@ res+=" ${magenta}${VCS_STATUS_CHANGE[1]}${grey}${VCS_STATUS_CHANGE[2]}"
 #   unstaged: non-empty if the repository contains unstaged changes.
 #   revision: an identifier of the currently checked out revision.
 #   misc:     a string that may contain anything the backend author likes.
-VCS_INFO_formats "" "" "" "" "" "" "${res}%f"
+VCS_INFO_formats "" "" "" "" "" "" "${res}"
 return 0
