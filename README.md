@@ -1,6 +1,13 @@
-# dotfiles
+# ilyaluk's dotfiles
 
-Loose collection of personal dotfiles and scripts, managed with chezmoi.
+Personal dotfiles, managed with [chezmoi](https://www.chezmoi.io/).
+
+This supports macOS and Debian (only UI, no separation for headless systems yet).
+
+macOS part is not maintained after my switch to Linux, but it should work noneetheless.
+
+<details>
+<summary>Legacy unautomated notes for macOS</summary>
 
 On a new mac:
 
@@ -54,3 +61,5 @@ Not automated yet, future work:
 - setapp stuff
 - bettertouchtool settings
 - jjui
+
+</details>
