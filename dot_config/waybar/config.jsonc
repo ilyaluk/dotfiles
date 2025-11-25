@@ -1,29 +1,30 @@
 // -*- mode: jsonc -*-
 {
-  "height": 20, // Waybar height (to be removed for auto height)
-  "spacing": 0, // Gaps between modules (4px)
+  "spacing": 0,
 
-  "modules-left": ["sway/workspaces", "sway/mode", "sway/scratchpad"],
-  // "modules-center": [],
+  "modules-left": [
+    //
+    "sway/workspaces",
+    "sway/mode",
+    "sway/scratchpad",
+  ],
+
   "modules-right": [
-    // "network",
-    //"cpu",
-    //"memory",
-    //"temperature",
-
-    "mpris",
+    //
     "privacy",
+    "mpris",
     "tray",
     "sway/language",
     "pulseaudio",
+    "power-profiles-daemon",
     "battery",
-    "power-profiles-daemon", // TODO
     "clock",
+    "custom/dark_mode",
     "idle_inhibitor",
     "custom/power",
   ],
 
-  // Modules configuration
+  // Left modules
   "sway/workspaces": {
     "disable-scroll": true,
     "format": "<span color='#ffffff' size='11.5pt'>{name}</span> {windows}",
@@ -57,16 +58,41 @@
     "tooltip": true,
     "tooltip-format": "{app}: {title}",
   },
-  "idle_inhibitor": {
-    "format": "{icon}",
-    "format-icons": {
-      "activated": "",
-      "deactivated": "",
+
+  // Right modules
+  "privacy": {
+    "icon-spacing": 8,
+    "icon-size": 14,
+    "transition-duration": 0,
+    "modules": [
+      {
+        "type": "audio-in",
+        "tooltip": true,
+        "tooltip-icon-size": 24,
+      },
+      {
+        "type": "screenshare",
+        "tooltip": true,
+        "tooltip-icon-size": 24,
+      },
+    ],
+  },
+  "mpris": {
+    "format": "{player_icon} {dynamic}",
+    "format-paused": "{status_icon} <i>{dynamic}</i>",
+    "dynamic-order": ["artist", "title"],
+    "title-len": 30,
+    "artist-len": 15,
+    "player-icons": {
+      "default": "\udb81\udc0a",
+    },
+    "status-icons": {
+      "paused": "\udb80\udfe4",
     },
   },
   "tray": {
-    // "icon-size": 21,
-    "spacing": 10,
+    "spacing": 7,
+    // this needs a patch from PR
     "orders": {
       "org.twosheds.iwgtk": -20,
       "blueman": -10,
@@ -76,12 +102,56 @@
       "io.github.slgobinath.SafeEyes": 40,
     },
   },
+  "pulseaudio": {
+    "scroll-step": 0, // disable scroll volume change
+
+    "format": "{icon} {volume}%{format_source}",
+    "format-muted": "<span color='#ffa0a0' font_size='13pt'>\udb81\udf5f</span>{format_source}",
+
+    "format-source": "",
+    "format-source-muted": " <span color='#ffa0a0' font_size='12pt'>\udb80\udf6d</span>",
+
+    "format-icons": {
+      "headphone": "\uee58",
+      "hands-free": "\uee59",
+      "headset": "\uee59",
+      "default": ["󰕾"],
+    },
+
+    "on-click": "pavucontrol",
+  },
+  "power-profiles-daemon": {
+    "format": "{icon}",
+    "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+    "tooltip": true,
+    "format-icons": {
+      "default": "",
+      "performance": "\uf0e7",
+      "balanced": "\uf24e",
+      "power-saver": "\udb80\udf2a",
+    },
+  },
+  "battery": {
+    "states": {
+      // "good": 95,
+      "warning": 30,
+      "critical": 15,
+    },
+    "format": "{icon} {capacity}%",
+    // "format-full": "{capacity}%",
+    // "format-charging": "{capacity}%",
+    // "format-plugged": "{capacity}%",
+    "format-alt": "{time}",
+    // "format-good": "", // An empty format will hide the module
+    // "format-full": "",
+    "format-icons": ["", "", "", "", ""],
+  },
   "sway/language": {
     "format": "<span text_transform='uppercase'>{short}</span>",
   },
   "clock": {
     // welp, {:<span> doesn't work, so move opening tag outside, but closing inside
-    "format": "<span color='#a0a0a0'>{:%a %d.%m</span> <span>%H:%M</span>}",
+    "format": "<span color='#a0a0a0' font_weight='normal'>{:%a %d.%m</span> <span>%H:%M</span>}",
     "tooltip-format": "<tt><small>{calendar}</small></tt>",
     "locale": "en_GB.UTF-8", // weeks start with Mon
     "calendar": {
@@ -99,71 +169,26 @@
       },
     },
   },
-  "battery": {
-    "states": {
-      // "good": 95,
-      "warning": 30,
-      "critical": 15,
-    },
-    // TODO
-    "format": "{icon}  {capacity}%",
-    // "format-full": "{capacity}%",
-    // "format-charging": "{capacity}%",
-    // "format-plugged": "{capacity}%",
-    "format-alt": "{time}",
-    // "format-good": "", // An empty format will hide the module
-    // "format-full": "",
-    "format-icons": ["", "", "", "", ""],
+  "custom/dark_mode": {
+    "format": "{}",
+    "tooltip": false,
+    // waybar keeps childer running after reload, but I don't reload that often anyway
+    "exec": "darkman watch | jq --raw-input --unbuffered -c '{\"text\": (if . == \"light\" then \"\uf522\" else \"\uf4ee\" end), \"class\": .}'",
+    "return-type": "json",
+    "on-click": "darkman toggle",
   },
-  "power-profiles-daemon": {
-    "format": "{icon}",
-    "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
-    "tooltip": true,
+  "idle_inhibitor": {
+    "format": "{icon} ",
     "format-icons": {
-      "default": "",
-      "performance": "",
-      "balanced": "",
-      "power-saver": "",
+      "activated": "",
+      "deactivated": "",
     },
-  },
-  "mpris": {
-    "format": "{player_icon} {dynamic}",
-    "format-paused": "{status_icon} <i>{dynamic}</i>",
-    "dynamic-order": ["artist", "title"],
-    "title-len": 30,
-    "artist-len": 15,
-    "player-icons": {
-      "default": "\udb81\udc0a",
-      // "mpv": "🎵",
-    },
-    "status-icons": {
-      "paused": "\udb80\udfe4",
-    },
-  },
-  "pulseaudio": {
-    "scroll-step": 0, // %, can be a float
-    "format": "{icon} {volume}% {format_source}",
-    "format-bluetooth": "{icon} {volume}% {format_source}",
-    "format-bluetooth-muted": "{icon} \udb81\udf5f {format_source}",
-    "format-muted": "\udb81\udf5f {format_source}",
-    "format-source": " {volume}%",
-    "format-source-muted": "\udb80\udf6d",
-    "format-icons": {
-      "headphone": "\uee58",
-      "hands-free": "\uee59",
-      "headset": "\uee59",
-      "phone": "",
-      "portable": "",
-      "car": "",
-      "default": ["", "", ""],
-    },
-    "on-click": "pavucontrol",
   },
   "custom/power": {
-    "format": "⏻ ",
+    "format": "⏻",
     "tooltip": false,
     "menu": "on-click",
-    "menu-file": "/usr/share/waybar/custom_modules/power_menu.xml", // Menu file in resources folder
+    "menu-file": "/usr/share/waybar/custom_modules/power_menu.xml",
     "menu-actions": {
       "shutdown": "shutdown",
       "reboot": "reboot",
