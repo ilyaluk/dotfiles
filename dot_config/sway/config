@@ -293,9 +293,11 @@ bindsym --to-code $mod+r mode "resize"
         'brightnessctl set -m 1%+ | cut -d, -f4 | tr -d % > "$XDG_RUNTIME_DIR/wob.sock"'
 
     # Screenshots
-    bindsym --to-code Alt+Shift+3 exec grimshot copy screen
-    bindsym --to-code Alt+Shift+4 exec grimshot copy area
-    bindsym --to-code Alt+Shift+5 exec grimshot copy window
+    bindsym --to-code Alt+Shift+3 exec 'grimshot save output - | swappy -f -'
+    bindsym --to-code Ctrl+Alt+Shift+3 exec 'grimshot save screen - | swappy -f -'
+    bindsym --to-code Alt+Shift+4 exec 'grimshot save area - | swappy -f -'
+    bindsym --to-code Ctrl+Alt+Shift+4 exec 'grimshot --wait 2 save area - | swappy -f -'
+    bindsym --to-code Alt+Shift+5 exec 'grimshot save window - | swappy -f -'
 
 # Status Bar
 bar swaybar_command waybar
