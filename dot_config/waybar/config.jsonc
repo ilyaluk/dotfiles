@@ -27,7 +27,7 @@
   // Left modules
   "sway/workspaces": {
     "disable-scroll": true,
-    "format": "<span color='#ffffff' size='11.5pt'>{name}</span> {windows}",
+    "format": "<span color='#ffffff' size='11.5pt' font_weight='bold'>{name}</span> {windows}",
     "format-window-separator": " ",
     "window-format": "{name}",
     "window-rewrite-default": "\uf2d0",
@@ -137,21 +137,22 @@
       "warning": 30,
       "critical": 15,
     },
-    "format": "{icon} {capacity}%",
+    "format": "{icon}  {capacity}%",
     // "format-full": "{capacity}%",
     // "format-charging": "{capacity}%",
     // "format-plugged": "{capacity}%",
     "format-alt": "{time}",
+    "format-time": "{H}h<span color='#a0a0a0'>{M}m</span>",
     // "format-good": "", // An empty format will hide the module
     // "format-full": "",
     "format-icons": ["", "", "", "", ""],
   },
   "sway/language": {
-    "format": "<span text_transform='uppercase'>{short}</span>",
+    "format": "<span text_transform='uppercase' font_weight='bold'>{short}</span>",
   },
   "clock": {
     // welp, {:<span> doesn't work, so move opening tag outside, but closing inside
-    "format": "<span color='#a0a0a0' font_weight='normal'>{:%a %d.%m</span> <span>%H:%M</span>}",
+    "format": "<span color='#a0a0a0'>{:%a %d.%m</span> <span font_weight='bold'>%H:%M</span>}",
     "tooltip-format": "<tt><small>{calendar}</small></tt>",
     "locale": "en_GB.UTF-8", // weeks start with Mon
     "calendar": {

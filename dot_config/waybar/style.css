@@ -2,8 +2,6 @@
     font-family: JetBrainsMonoNerdFont, Roboto, Helvetica, Arial, sans-serif;
     font-size: 14px;
     color: #ffffff;
-
-    font-weight: bold;
 }
 
 window#waybar {
@@ -19,19 +17,19 @@ button {
 }
 
 #workspaces button:hover {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.1);
+    box-shadow: inherit;
+    text-shadow: inherit;
 }
 
 menu {
     border-radius: 15px;
     background: #161320;
     color: #b5e8e0;
-    font-weight: normal;
 }
 
 menuitem {
     border-radius: 5px;
-    font-weight: normal;
 }
 
 #workspaces button {
@@ -141,11 +139,6 @@ menuitem {
     }
 }
 
-#pulseaudio,
-#battery {
-    font-weight: normal;
-}
-
 /* Using steps() instead of linear as a timing function to limit cpu usage */
 #battery.critical:not(.charging) {
     background-color: #f53c3c;
@@ -174,10 +167,6 @@ label:focus {
     background-color: #ecf0f1;
     color: #2d3436;
     border-radius: 5px;
-}
-
-#mpris {
-    font-weight: normal;
 }
 
 #mpris.paused,
