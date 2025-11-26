@@ -1,39 +1,25 @@
-if [[ -n "$ZPROF" ]]; then
-    zmodload zsh/zprof
-fi
+[[ -n "$ZPROF" ]] && zmodload zsh/zprof
 
+# ================================================
+# Includes
+# ================================================
 source ~/.profile
 
-# enable zsh completion
+export NOTITLE=1 # disable auto-title in grml-zshrc
+source ~/.zsh/grml_rc
+
+source /usr/share/doc/fzf/examples/key-bindings.zsh
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# enable zsh completion for jujutsu
 fpath=(
     $HOME/.zsh/functions
     $fpath
 )
 
-export XDG_DATA_DIRS="/usr/local/share:/usr/share:/var/lib/flatpak/exports/share:/home/ilya/.local/share/flatpak/exports/share"
-
-# activate mise for all mise-managed binaries
-# TODO: this command takes ~20ms, look into ways to source from file
-#source <(mise activate)
-
-# ================================================
-# Apps config
-export GIT_TERMINAL_PROMPT=1
-export LESS="RSXF"
-export TG_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
-export LIMA_SHELL=zsh
-
-# disable auto-title from grml-zsh-config
-export NOTITLE=1
-
-# ================================================
-# Includes
-source ~/.zsh/grml_rc
-
-source /usr/share/doc/fzf/examples/key-bindings.zsh
-source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # ================================================
 # Shell stuff
+# ================================================
 export CDPATH=.:~/fb:~/fun
 export EDITOR=nvim
 
@@ -41,13 +27,58 @@ HISTFILE=~/.histfile
 HISTSIZE=100000000
 SAVEHIST=100000000
 setopt appendhistory autocd extendedglob
-unsetopt completealiases
 
 # Stop Ctrl+W on / and .
 autoload -U select-word-style
 select-word-style bash
 WORDCHARS='*?_-[]~=&;!#$%^(){}<>'
 
+autoload -z edit-command-line
+zle -N edit-command-line
+bindkey "^X^E" edit-command-line
+
+bindkey "^[[1;1C" forward-word
+bindkey "^[[1;1D" backward-word
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word
+bindkey "^[[1;9C" forward-word
+bindkey "^[[1;9D" backward-word
+
+# use zed binary, not zsh function
+unfunction zed
+
+ZSH_HIGHLIGHT_STYLES[comment]=fg=blue
+zstyle :compinstall filename "$USER/.zshrc"
+
+# ================================================
+# Expand .... to ../../.. in the command line
+# ================================================
+function expand-dots() {
+    local MATCH
+    if [[ $LBUFFER =~ '\.\.\.+' && ! $LBUFFER =~ '^.*go ' ]]; then
+        LBUFFER=$LBUFFER:fs%\.\.\.%../..%
+    fi
+}
+
+function expand-dots-then-expand-or-complete() {
+    zle expand-dots
+    zle expand-or-complete
+}
+
+function expand-dots-then-accept-line() {
+    zle expand-dots
+    zle accept-line
+}
+
+zle -N expand-dots
+zle -N expand-dots-then-expand-or-complete
+zle -N expand-dots-then-accept-line
+bindkey '^I' expand-dots-then-expand-or-complete
+bindkey '^M' expand-dots-then-accept-line
+
+# ================================================
+# Prompt
+# ================================================
 function prompt_venv () {
     REPLY=${VIRTUAL_ENV+🐍${VIRTUAL_ENV:t} }
 }
@@ -69,31 +100,44 @@ function prompt_kube_ctx () {
 }
 grml_theme_add_token kube_ctx -f prompt_kube_ctx '%F{magenta}' '%f'
 
-zstyle ':vcs_info:*' enable jj git svn
-# expand to "misc" template for jj backend, see .zsh/functions/VCS_INFO_get_data_jj
-zstyle ':vcs_info:jj:*' formats '[%m] '
-zstyle ':vcs_info:jj:*' actionformats '[%m] '
-
-ZSH_HIGHLIGHT_STYLES[comment]=fg=blue
-zstyle :compinstall filename "$USER/.zshrc"
 zstyle ':prompt:grml:right:setup' items ''
 zstyle ':prompt:grml:left:setup' items venv aws_profile kube_ctx user at host path vcs rc percent
 
-autoload -z edit-command-line
-zle -N edit-command-line
-bindkey "^X^E" edit-command-line
-
-bindkey "^[[1;5C" forward-word
-bindkey "^[[1;1C" forward-word
-bindkey "^[[1;1D" backward-word
-bindkey "^[[1;9C" forward-word
-bindkey "^[[1;9D" backward-word
-
-# autoload -U +X bashcompinit && bashcompinit
-# autoload -U compinit && compinit
+# VCS config
+zstyle ':vcs_info:*' enable jj git svn
+# expand to %m (misc) template for jj backend, see .zsh/functions/VCS_INFO_get_data_jj
+zstyle ':vcs_info:jj:*' formats '[%m] '
+zstyle ':vcs_info:jj:*' actionformats '[%m] '
 
 # ================================================
-# misc autocompletes
+# Title
+# ================================================
+function my_precmd_xterm_title() {
+    # shorten path elements if too long
+    # e.g. ~/wrk/long/project/path/aaa/bbb -> ~/w/l/p/path/aaa/bbb
+    local wd=${(%):-"%~"}
+    if (( $(echo "$wd" | tr -cd '/' | wc -c) > 3 )); then
+        wd="$(echo "$wd" | awk -F/ '{ for (i=1; i<=NF-3; i++) $i=substr($i, 1, 1); print }' OFS=/)"
+    fi
+    set_title "foot: $wd"
+}
+
+function my_preexec_xterm_title() {
+    # set title to command being executed with ! prefix
+    # e.g. !htop
+    set_title "foot: ${(%):-""}!$2"
+}
+
+case $TERM in
+    (xterm*|rxvt*|foot)
+        add-zsh-hook precmd my_precmd_xterm_title
+        add-zsh-hook preexec my_preexec_xterm_title
+        ;;
+esac
+
+# ================================================
+# Misc autocompletes
+# ================================================
 source ~/.zsh/mise_completion
 source ~/.zsh/atuin
 source ~/.zsh/jj
@@ -101,36 +145,16 @@ source ~/.zsh/tailscale
 source ~/.zsh/rc
 
 # ================================================
-# Title setting
-function my_precmd_xterm_title() {
-    # shorten path elements if too long
-    # e.g. ~/wrk/long/project/path/aaa/bbb -> ~/w/l/p/path/aaa/bbb
-    local wd="${(%):-"%~"}"
-    if (( $(echo "$wd" | tr -cd '/' | wc -c) > 3 )); then
-    wd="$(echo "$wd" | awk -F'/' '{
-            for (i=1; i<=NF-3; i++) $i=substr($i, 1, 1);
-            print
-        }' OFS="/")"
-    fi
-    set_title "$wd"
-}
-
-function my_preexec_xterm_title() {
-    # set title to command being executed with ! prefix
-    # e.g. !htop
-    set_title "${(%):-""}!$2"
-}
-
-case $TERM in
-    (xterm*|rxvt*)
-        add-zsh-hook precmd my_precmd_xterm_title
-        add-zsh-hook preexec my_preexec_xterm_title
-        ;;
-esac
-
+# Apps config
+# ================================================
+export GIT_TERMINAL_PROMPT=1
+export LESS="RSXF"
+export TG_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
+export LIMA_SHELL=zsh
 
 # ================================================
 # Aliases / functions
+# ================================================
 alias -- -='cd -'
 
 alias py=python3
@@ -138,15 +162,20 @@ alias python=python3
 alias ipy=python3
 alias vim=nvim
 alias diff=colordiff
+alias k=kubectl
+
 alias tf=terraform
 alias tfi='terraform init'
 alias tfp='terraform plan'
 alias tfa='terraform apply'
+
+alias tg=terragrunt
 alias tgi='terragrunt init'
 alias tgp='terragrunt plan'
 alias tga='terragrunt apply'
-alias tg=terragrunt
-alias k=kubectl
+
+alias pbcopy=wl-copy
+alias pbpaste=wl-paste
 
 alias b64='base64'
 alias b64d='base64 -d'
@@ -155,12 +184,17 @@ function len() { echo ${#1} }
 alias hd='hexdump -C'
 alias sus='sort | uniq -c | sort'
 
+alias dquilt="quilt --quiltrc=${HOME}/.quiltrc-dpkg"
+
 alias awsp='export AWS_PROFILE=$(cat ~/.aws/config | grep "^\[profile" | cut -d" " -f2- | tr -d "\]" | fzf)'
 alias awsup='unset AWS_PROFILE'
 alias awsl='aws sso login'
 
 alias ghprv='gh pr view --web $(jj bookmark list -r "heads(::@- & bookmarks())" -T name)'
 
+# ================================================
+# jj aliases / functions
+# ================================================
 alias j=jj
 alias jl='jj log'
 alias jn='jj next || jj new'
@@ -221,42 +255,10 @@ function newpr() {
     ghprv
 }
 
-# use zed binary, not zsh function
-unfunction zed
-
-alias dquilt="quilt --quiltrc=${HOME}/.quiltrc-dpkg"
-
 # ================================================
-# Expand .... to ../../.. in the command line
-function expand-dots() {
-    local MATCH
-    if [[ $LBUFFER =~ '\.\.\.+' && ! $LBUFFER =~ '^.*go ' ]]; then
-        LBUFFER=$LBUFFER:fs%\.\.\.%../..%
-    fi
-}
-
-function expand-dots-then-expand-or-complete() {
-    zle expand-dots
-    zle expand-or-complete
-}
-
-function expand-dots-then-accept-line() {
-    zle expand-dots
-    zle accept-line
-}
-
-zle -N expand-dots
-zle -N expand-dots-then-expand-or-complete
-zle -N expand-dots-then-accept-line
-bindkey '^I' expand-dots-then-expand-or-complete
-bindkey '^M' expand-dots-then-accept-line
-
-if ! pgrep ssh-agent > /dev/null; then
-    ssh-agent -t 12h > "$XDG_RUNTIME_DIR/ssh-agent.env"
-fi
-if [ ! -f "$SSH_AUTH_SOCK" ]; then
-    source "$XDG_RUNTIME_DIR/ssh-agent.env" >/dev/null
-fi
+# ssh-agent
+# ================================================
+export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/openssh_agent # systemd socket
 
 if [ -z "$(ssh-add -l 2>/dev/null | grep -v 'The agent has no identities')" ]; then
     echo "ssh agent has no identities, adding all keys from ~/.ssh/"
@@ -266,6 +268,5 @@ if [ -z "$(ssh-add -l 2>/dev/null | grep -v 'The agent has no identities')" ]; t
     done
 fi
 
-if [[ -n "$ZPROF" ]]; then
-    zprof
-fi
+# profiling end
+[[ -n "$ZPROF" ]] && zprof

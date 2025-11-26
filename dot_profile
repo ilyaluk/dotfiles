@@ -5,3 +5,10 @@ PATH="$PATH:$HOME/.local/bin"
 PATH="$PATH:$HOME/.local/share/mise/shims"
 PATH="$PATH:/var/lib/flatpak/exports/bin"
 export PATH
+
+# Override XDG_DATA_DIRS to include flatpak paths after default ones
+# This is needed for defaulting browser to firefox, not chromium from flatpak
+XDG_DATA_DIRS="/usr/local/share:/usr/share"
+XDG_DATA_DIRS="$XDG_DATA_DIRS:/var/lib/flatpak/exports/share"
+XDG_DATA_DIRS="$XDG_DATA_DIRS:$HOME/.local/share/flatpak/exports/share"
+export XDG_DATA_DIRS
