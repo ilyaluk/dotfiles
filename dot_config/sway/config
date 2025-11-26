@@ -77,7 +77,7 @@ exec systemd-cat firefox-esr
 exec systemd-cat zed
 # need gio launch for darkmode hack to work, gtk-launch does not work
 # sh -c '... & sleep 0.5; [ "$(darkman get)" = "dark" ] && (darkman toggle; darkman toggle)'
-exec systemd-cat gio launch /var/lib/flatpak/exports/share/applications/org.telegram.desktop.desktop
+exec 'sleep 3; systemd-cat gio launch /var/lib/flatpak/exports/share/applications/org.telegram.desktop.desktop'
 exec systemd-cat keepassxc
 exec systemd-cat thunderbird
 
@@ -295,11 +295,11 @@ bindsym --to-code $mod+r mode "resize"
         'brightnessctl set -m 1%+ | cut -d, -f4 | tr -d % > "$XDG_RUNTIME_DIR/wob.sock"'
 
     # Screenshots
-    bindsym --to-code Alt+Shift+3 exec 'grimshot save output - | swappy -f -'
-    bindsym --to-code Ctrl+Alt+Shift+3 exec 'grimshot save screen - | swappy -f -'
-    bindsym --to-code Alt+Shift+4 exec 'grimshot save area - | swappy -f -'
-    bindsym --to-code Ctrl+Alt+Shift+4 exec 'grimshot --wait 2 save area - | swappy -f -'
-    bindsym --to-code Alt+Shift+5 exec 'grimshot save window - | swappy -f -'
+    bindsym Alt+Shift+3 input type:keyboard xkb_switch_layout 0; exec 'grimshot save output - | swappy -f -'
+    bindsym Ctrl+Alt+Shift+3 input type:keyboard xkb_switch_layout 0; exec 'grimshot save screen - | swappy -f -'
+    bindsym Alt+Shift+4 input type:keyboard xkb_switch_layout 0; exec 'grimshot save area - | swappy -f -'
+    bindsym Ctrl+Alt+Shift+4 input type:keyboard xkb_switch_layout 0; exec 'grimshot --wait 2 save area - | swappy -f -'
+    bindsym Alt+Shift+5 input type:keyboard xkb_switch_layout 0; exec 'grimshot save window - | swappy -f -'
 
 # Status Bar
 bar swaybar_command waybar
