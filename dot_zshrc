@@ -138,10 +138,7 @@ esac
 # ================================================
 # Misc autocompletes
 # ================================================
-source ~/.zsh/mise_completion
-source ~/.zsh/atuin
-source ~/.zsh/jj
-source ~/.zsh/tailscale
+for f in ~/.zsh/completions/*; source $f
 source ~/.zsh/rc
 
 # ================================================
