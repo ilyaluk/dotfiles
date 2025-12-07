@@ -1,6 +1,7 @@
 [user]
 	name = Ilya Lukyanov
 	email = "ilya@luk.moe"
+	signingkey = ~/.ssh/id_ed25519_sk_git_signing.pub
 
 [alias]
 	st = status
@@ -23,5 +24,7 @@
 	colormoved = "default"
 	colormovedws = "allow-indentation-change"
 
+[gpg]
+	format = ssh
 [gpg "ssh"]
 	allowedSignersFile = ~/.ssh/allowed_signers
