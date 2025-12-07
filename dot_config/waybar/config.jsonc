@@ -42,6 +42,7 @@
       "class<org.telegram.desktop>": "\ue217",
       "class<Slack>": "\udb81\udcb1",
       "class<chrome-app.slack.com.*>": "\udb81\udcb1",
+      "class<mpv>": "\uf01d",
     },
     "format-icons": {
       "default": "",

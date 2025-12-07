@@ -54,6 +54,10 @@ menuitem {
     background-color: #6e806e;
 }
 
+#workspaces button.visible:not(.focused) {
+    background-color: #374037;
+}
+
 #workspaces button.urgent {
     background-color: #eb4d4b;
 }
@@ -83,12 +87,13 @@ menuitem {
 
 #power-profiles-daemon {
     padding: 0 8px;
-    padding-right: 11px;
+}
+#power-profiles-daemon.power-saver {
+    /* i hate this */
+    padding-right: 9px;
 }
 #power-profiles-daemon.balanced {
-    /* i hate this */
-    padding: 0 8px;
-    padding-right: 15px;
+    padding-right: 14px;
 }
 
 #battery {
