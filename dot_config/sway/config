@@ -75,9 +75,7 @@ exec systemd-cat sway-kill-dialogs-on-unfocus.sh
 # Autostart apps
 exec systemd-cat firefox-esr
 exec systemd-cat zed
-# need gio launch for darkmode hack to work, gtk-launch does not work
-# sh -c '... & sleep 0.5; [ "$(darkman get)" = "dark" ] && (darkman toggle; darkman toggle)'
-exec 'sleep 3; systemd-cat gio launch /var/lib/flatpak/exports/share/applications/org.telegram.desktop.desktop'
+exec systemd-cat org.telegram.desktop
 exec systemd-cat keepassxc
 exec systemd-cat thunderbird
 
