@@ -8,6 +8,8 @@ source ~/.profile
 export NOTITLE=1 # disable auto-title in grml-zshrc
 source ~/.zsh/grml_rc
 
+source ~/.zsh/atuin
+
 source /usr/share/doc/fzf/examples/key-bindings.zsh
 source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
@@ -129,11 +131,31 @@ function my_preexec_xterm_title() {
 }
 
 case $TERM in
-    (xterm*|rxvt*|foot)
+    (xterm*|rxvt*|foot*)
         add-zsh-hook precmd my_precmd_xterm_title
         add-zsh-hook preexec my_preexec_xterm_title
         ;;
 esac
+
+# ================================================
+# Shell integration
+# ================================================
+function my_precmd_shell_integration() {
+    print -Pn "\e]133;D\e\\" # output end
+    print -Pn "\e]133;A\e\\" # new command
+}
+
+function my_preexec_shell_integration() {
+    print -Pn "\e]133;C\e\\" # output start
+}
+
+case $TERM in
+    (foot*)
+        add-zsh-hook precmd my_precmd_shell_integration
+        add-zsh-hook preexec my_preexec_shell_integration
+        ;;
+esac
+
 
 # ================================================
 # Misc autocompletes
