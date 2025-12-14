@@ -1,5 +1,5 @@
 [tools]
-aws-cli = "latest"
+aws-cli = { version = "latest", symlink_bins = "true" }
 github-cli = "latest"
 jj = "latest"
 kubectl = "latest"
