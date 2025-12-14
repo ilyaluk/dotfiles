@@ -33,6 +33,7 @@
     "window-rewrite-default": "\uf2d0",
     "window-rewrite": {
       "class<firefox-esr>": "\ue658",
+      "class<firefox-esr> title<.*Apple Music.*>": "\uf001",
       "class<thunderbird>": "\uf42f",
       "class<org.chromium.Chromium>": "\udb80\udeaf",
       "class<dev.zed.Zed>": "\udb84\udcf8",
