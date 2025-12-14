@@ -42,16 +42,20 @@ output "*" {
 
 ### exec stuff
 
-set $lock "loginctl lock-session && swaylock"
+set $lock "brightnessctl -s; loginctl lock-session && swaylock"
 
 ### Idle configuration
 exec swayidle -w \
     timeout 120 $lock \
     timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-    before-sleep $lock
+    before-sleep $lock \
+    after-resume 'brightnessctl -r'
 
 # this is needed for correct dir order in telegram, use firefox and not chromium for links
 exec systemctl --user import-environment XDG_DATA_DIRS
+
+# Status Bar
+exec systemd-cat waybar
 
 # background GUI services
 exec systemd-cat swaync
@@ -298,9 +302,6 @@ bindsym --to-code $mod+r mode "resize"
     bindsym Alt+Shift+4 input type:keyboard xkb_switch_layout 0; exec 'grimshot save area - | swappy -f -'
     bindsym Ctrl+Alt+Shift+4 input type:keyboard xkb_switch_layout 0; exec 'grimshot --wait 2 save area - | swappy -f -'
     bindsym Alt+Shift+5 input type:keyboard xkb_switch_layout 0; exec 'grimshot save window - | swappy -f -'
-
-# Status Bar
-bar swaybar_command waybar
 
 # Styling
 
