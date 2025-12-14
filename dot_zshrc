@@ -274,18 +274,8 @@ function newpr() {
     ghprv
 }
 
-# ================================================
-# ssh-agent
-# ================================================
-export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/openssh_agent # systemd socket
-
-if [ -z "$(ssh-add -l 2>/dev/null | grep -v 'The agent has no identities')" ]; then
-    echo "ssh agent has no identities, adding all keys from ~/.ssh/"
-    for key in ~/.ssh/id_*; do
-        [[ "$key" == *.pub ]] && continue
-        [[ -f "$key" ]] && ssh-add "$key" 2>/dev/null
-    done
-fi
+# ssh-agent sock
+export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh
 
 # profiling end
 [[ -n "$ZPROF" ]] && zprof
