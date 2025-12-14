@@ -5,8 +5,8 @@
 
 
 
-"text"      = { fg = "#ebdbb2", bg = "#282828" }
-"dimmed"    = { fg = "#665c54", bg = "#282828" }
+"text"      = { fg = "#ebdbb2" }
+"dimmed"    = { fg = "#665c54" }
 "title"     = { fg = "#458588", bold = true }
 "shortcut"  = { fg = "#b16286" }
 "matched"   = { fg = "#d79921" }
@@ -35,7 +35,7 @@
 "evolog" = { fg = "#ebdbb2" }
 "evolog selected" = { bg = "#504945", fg = "#ebdbb2", bold = true }
 
-"menu" = { bg = "#282828" }
+"menu" = { }
 "menu title" = { fg = "#282828", bg = "#b16286", bold = true }
 "menu shortcut" = { fg = "#b16286" }
 "menu matched" = { fg = "#d79921", bold = true }
@@ -43,20 +43,20 @@
 "menu border" = { fg = "#3c3836" }
 "menu selected" = { bg = "#504945", fg = "#ebdbb2" }
 
-"help" = { bg = "#282828" }
+"help" = { }
 "help title" = { fg = "#98971a", bold = true, underline = true }
 "help border" = { fg = "#3c3836" }
 
 "preview" = { fg = "#ebdbb2" }
 "preview border" = { fg = "#3c3836" }
 
-"confirmation" = { bg = "#282828" }
+"confirmation" = { }
 "confirmation text" = { fg = "#458588", bold = true }
 "confirmation dimmed" = { fg = "#665c54" }
 "confirmation border" = { fg = "#cc241d", bold = true }
 "confirmation selected" = { bg = "#504945", fg = "#ebdbb2" }
 
-"undo" = { bg = "#282828" }
+"undo" = { }
 "undo confirmation dimmed" = { fg = "#665c54" }
 "undo confirmation selected" = { bg = "#504945", fg = "#ebdbb2" }
 
@@ -79,5 +79,3 @@
 "file" = { fg = "#d79921" }
 "change" = { fg = "#cc241d" }
 "bookmark" = { fg = "#b16286" }
-
-

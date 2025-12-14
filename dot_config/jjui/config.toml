@@ -1,0 +1,3 @@
+[ui.theme]
+light = "base16-gruvbox-light"
+dark = "base16-gruvbox-dark"
