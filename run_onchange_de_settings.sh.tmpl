@@ -3,6 +3,7 @@
 set -ex
 
 gsettings set org.gnome.desktop.interface gtk-enable-primary-paste false
+gsettings set org.blueman.general symbolic-status-icons true
 xdg-mime default firefox.desktop x-scheme-handler/http
 xdg-mime default firefox.desktop x-scheme-handler/https
 {{ end }}
