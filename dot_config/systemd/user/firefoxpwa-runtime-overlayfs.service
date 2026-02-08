@@ -1,0 +1,15 @@
+[Unit]
+Description=Service to use PWAsForFirefox with OverlayFS for runtime
+AssertPathIsDirectory=/usr/lib/firefox-esr
+
+[Service]
+Type=simple
+ExecStart=fuse-overlayfs -f -o squash_to_uid=%U,squash_to_gid=%G,lowerdir=/usr/lib/firefox-esr,upperdir=%t/firefoxpwa/overlayfs/upper,workdir=%t/firefoxpwa/overlayfs/work %h/.local/share/firefoxpwa/runtime/
+# add some time for fuse to mount dir, I'm too lazy to implement it proper
+ExecStartPost=sleep 0.1
+ExecStartPost=ln -sf firefox-esr %h/.local/share/firefoxpwa/runtime/firefox
+ExecStop=fusermount -u %h/.local/share/firefoxpwa/runtime/
+RuntimeDirectory=firefoxpwa/overlayfs firefoxpwa/overlayfs/upper firefoxpwa/overlayfs/work
+
+[Install]
+WantedBy=default.target
