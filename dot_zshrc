@@ -9,6 +9,7 @@ export NOTITLE=1 # disable auto-title in grml-zshrc
 source ~/.zsh/grml_rc
 
 source ~/.zsh/atuin
+source ~/.zsh/zoxide
 
 source /usr/share/doc/fzf/examples/key-bindings.zsh
 source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -22,7 +23,6 @@ fpath=(
 # ================================================
 # Shell stuff
 # ================================================
-export CDPATH=.:~/fb:~/fun
 export EDITOR=nvim
 
 HISTFILE=~/.histfile
@@ -51,6 +51,14 @@ unfunction zed
 
 ZSH_HIGHLIGHT_STYLES[comment]=fg=blue
 zstyle :compinstall filename "$USER/.zshrc"
+
+function cd() {
+    if [[ -f "$1" ]]; then
+        __zoxide_z "$(dirname "$1")"
+    else
+        __zoxide_z "$@"
+    fi
+}
 
 # ================================================
 # Expand .... to ../../.. in the command line
@@ -170,12 +178,15 @@ export GIT_TERMINAL_PROMPT=1
 export LESS="RSXF"
 export TG_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
 export LIMA_SHELL=zsh
+export KUBECTL_EXTERNAL_DIFF="colordiff -N -u"
 
 # ================================================
 # Aliases / functions
 # ================================================
 alias -- -='cd -'
 
+alias imv=imv-wayland
+alias feh=imv
 alias py=python3
 alias python=python3
 alias ipy=python3
@@ -240,7 +251,7 @@ function jm() {
 function llm_desc() {
     local change_ref="${1:-@}"
     (jj show --stat "$change_ref"; jj diff --git -r "$change_ref") | \
-        llm -m claude-4-sonnet -s 'Generate git commit title and description based on provided change description and git-formatted diff. Include ticket number if it is present in the input. Use existing text desctiption (if provided) as a arefernce. Be succint. Describe changes as list, prepend each item with "- ". Output _only_ title, newline, message.' | \
+        llm -m claude-sonnet-4.5 -s 'Generate git commit title and description based on provided change description and git-formatted diff. Include ticket number if it is present in the input. Use existing text desctiption (if provided) as a arefernce. Be succint. Describe changes as list, prepend each item with "- ". Output _only_ title, newline, message.' | \
         jj desc --stdin "$change_ref"
     # edit manually right after
     jj desc "$change_ref"
@@ -258,14 +269,24 @@ function newpr() {
     branch=$(jj log -r "${change_id} & bookmarks()" -T bookmarks --no-graph)
     if [[ -z "$branch" ]]; then
         echo "Generating suggested branch name..."
-        suggest=$(jj log -r "${base}..@" --patch | \
-            llm -m claude-4-sonnet -s 'Generate a short git branch name based on the log and patches. Use following format: "{user}/{ticket-}{name}". User should be short name. If none of commits have ticket refence, dont include it. Output _only_ branch name.')
-        echo "Enter branch name. Empty to auto-generate. LLM suggested: $suggest"
+        suggest=$(
+            jj log -r "${base}..@" --patch | \
+            llm -m claude-sonnet-4.5 -s \
+                'Generate a short git branch name based on the log and patches. Use following format: "{user}/{ticket-}{name}". User should be short name. If none of commits have ticket reference, do not include it. Ticket should be upcase, user/name lowercase. Your response should ONLY include branch name.'
+            )
+        echo "Enter branch name. LLM suggested: ${suggest} (enter to accept)"
         read branch
-        [[ -n "$branch" ]] && jj bookmark create "$branch" -r "$change_id"
+
+        if [[ -z "$branch" && -n "$suggest" ]]; then
+            branch="$suggest"
+        fi
+        if [[ -n "$branch" ]]; then
+            jj bookmark create "$branch" -r "$change_id"
+        fi
     fi
     if [[ -n "$branch" ]]; then
-        jj git push -b "$branch" --allow-new
+        jj bookmark track "$branch" --remote origin
+        jj git push -b "$branch"
     else
         jj git push -c "$change_id"
     fi
