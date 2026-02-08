@@ -9,14 +9,26 @@ uv = "latest"
 jjui = "latest"
 atuin = "latest"
 rust = "latest"
-claude-code = "latest"
 k9s = "latest"
 "github:busser/tfautomv" = "latest"
 "pipx:llm" = "latest"
 gcloud = "latest"
 go = "latest"
 pipx = "latest"
-terraform = "1.10"
+terraform = "1.10.5"
 vault = "latest"
 node = "22"
 yq = "latest"
+zoxide = "latest"
+gofumpt = "latest"
+staticcheck = "latest"
+golangci-lint = "1"
+clickhouse = "latest"
+argocd = "latest"
+helm = "latest"
+helm-ls = "latest"
+
+[settings]
+idiomatic_version_file_enable_tools = ["terraform"]
+
+[settings.python]

@@ -2,7 +2,10 @@
   {
     "context": "Editor",
     "bindings": {
-      "cmd-1": ["workspace::ActivatePane", 0],
+      "cmd-1": [
+        "workspace::ActivatePane",
+        0
+      ],
       "ctrl-alt-shift-down": "copilot::NextSuggestion",
       "ctrl-alt-shift-up": "copilot::PreviousSuggestion",
       "cmd-shift-o": "outline::Toggle",
@@ -32,6 +35,15 @@
     "context": "(Editor && edit_prediction)",
     "bindings": {
       "ctrl-alt-tab": "editor::AcceptEditPrediction"
+    }
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "shift-enter": [
+        "terminal::SendText",
+        "\u001b\r"
+      ]
     }
   }
 ]

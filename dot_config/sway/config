@@ -13,6 +13,9 @@ set $term foot
 # include before running any apps, as it sets up env for some apps to work correctly
 include /etc/sway/config.d/*
 
+### Common config
+focus_on_window_activation focus
+
 ### Output configuration
 # You can get the names of your outputs by running: swaymsg -t get_outputs
 output eDP-1 {
@@ -47,7 +50,7 @@ set $lock "brightnessctl -s; loginctl lock-session && swaylock"
 ### Idle configuration
 exec swayidle -w \
     timeout 120 $lock \
-    timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+    timeout 180 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
     before-sleep $lock \
     after-resume 'brightnessctl -r'
 
@@ -103,7 +106,7 @@ input "6127:24801:TrackPoint_Keyboard_II" {
     xkb_options grp:caps_toggle
 
     accel_profile adaptive
-    pointer_accel -0.65
+    pointer_accel -0.45
     natural_scroll enabled
     scroll_factor 0.2
 }
@@ -221,6 +224,7 @@ input "1739:53160:SYNA802E:00_06CB:CFA8_Touchpad" {
 
     # Toggle the current focus between tiling and floating mode
     bindsym --to-code $mod+Shift+space floating toggle
+    bindsym --to-code $mod+Shift+Alt+space sticky toggle
 
     # Swap focus between the tiling area and the floating area
     bindsym --to-code $mod+space focus mode_toggle
@@ -320,13 +324,16 @@ for_window [app_id="^foot$"] border pixel 2
 for_window [app_id="^firefox-esr$"] move container to workspace 1, workspace 1
 for_window [app_id="^dev.zed.Zed$"] move container to workspace 2, workspace 2
 for_window [app_id="^org.telegram.desktop"] title_format "Telegram", move container to workspace 3, workspace 3, layout tabbed
-for_window [app_id="^(Slack|chrome-app.slack.com.*)$"] title_format "Slack", move container to workspace 3, workspace 3, layout tabbed
+for_window [app_id="^(Slack|FFPWA-01KFXWQSFN190JJMK74YVVQ5XN|chrome-app.slack.com.*)$"] title_format "Slack", move container to workspace 3, workspace 3, layout tabbed
+for_window [app_id="^FFPWA-01KFXY5JX7NH2BPMN4V7J4K0JX$"] title_format "Apple Music", move container to workspace 4, workspace 4
 for_window [app_id="^thunderbird$"] move container to workspace 5, workspace 5
 
 # Dialogs
 for_window [window_type="dialog"] floating enable
 for_window [window_role="dialog"] floating enable
 
+
+for_window [app_id="^gcr-prompter$"] floating enable, sticky enable
 for_window [title="^Picture-in-Picture$"] floating enable, sticky enable
 for_window [app_id="^io.github.slgobinath.SafeEyes$"] floating enable, sticky enable
 for_window [app_id="^it.mijorus.smile$"] floating enable, sticky enable, border pixel 0

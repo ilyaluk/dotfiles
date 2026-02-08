@@ -34,6 +34,7 @@
     "window-rewrite": {
       "class<firefox-esr>": "\ue658",
       "class<firefox-esr> title<.*Apple Music.*>": "\uf001",
+      "class<FFPWA-01KFXY5JX7NH2BPMN4V7J4K0JX>": "\uf001",
       "class<thunderbird>": "\uf42f",
       "class<org.chromium.Chromium>": "\udb80\udeaf",
       "class<dev.zed.Zed>": "\udb84\udcf8",
@@ -43,6 +44,7 @@
       "class<org.telegram.desktop>": "\ue217",
       "class<Slack>": "\udb81\udcb1",
       "class<chrome-app.slack.com.*>": "\udb81\udcb1",
+      "class<FFPWA-01KFXWQSFN190JJMK74YVVQ5XN>": "\udb81\udcb1",
       "class<mpv>": "\uf01d",
     },
     "format-icons": {
