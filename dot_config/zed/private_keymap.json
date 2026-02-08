@@ -1,0 +1,49 @@
+[
+  {
+    "context": "Editor",
+    "bindings": {
+      "cmd-shift-o": "outline::Toggle",
+      "ctrl-k ctrl-g": [
+        "editor::SelectNext",
+        {
+          "replace_newest": true,
+        },
+      ],
+    },
+  },
+  // {
+  //   "context": "(((((Dock || Workspace) || OutlinePanel) || ProjectPanel) || CollabPanel) || (Editor && mode == auto_height && !PromptEditor))",
+  //   "bindings": {
+  //     "escape": "editor::ToggleFocus",
+  //   },
+  // },
+  {
+    "context": "(Editor && (edit_prediction && (showing_completions || in_leading_whitespace)))",
+    "bindings": {
+      "ctrl-alt-tab": "editor::AcceptEditPrediction",
+    },
+  },
+  {
+    "context": "(Editor && edit_prediction)",
+    "bindings": {
+      "ctrl-alt-tab": "editor::AcceptEditPrediction",
+    },
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "shift-enter": ["terminal::SendText", "\u001b\r"],
+    },
+  },
+  {
+    "bindings": {
+      "ctrl-shift-w": null,
+    },
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "ctrl-shift-w": "pane::CloseActiveItem",
+    },
+  },
+]

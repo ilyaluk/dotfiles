@@ -1,0 +1,16 @@
+[
+  {
+    "label": "jjui",
+    "command": "jjui $ZED_DIRNAME",
+    "use_new_terminal": false,
+    "reveal_target": "center",
+    "allow_concurrent_runs": false,
+    "env": {
+      "EDITOR": "zed -w",
+      "VISUAL": "zed -w",
+    },
+    "reveal": "always",
+    "hide": "on_success",
+    "shell": "system",
+  },
+]
