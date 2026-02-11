@@ -1,0 +1,5 @@
+#!/bin/bash
+# change title
+echo -ne "\033]0;$(basename $0)\007";
+# remove k9s- prefix from script name
+exec k9s --context "${0##*/k9s-}"
