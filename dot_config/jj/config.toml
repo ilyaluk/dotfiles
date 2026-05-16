@@ -152,3 +152,6 @@ patterns = ["glob:'**/*.tf'"]
 [fix.tools.tg-hclfmt]
 command = ["tg-fmt"]
 patterns = ["glob:'**/terragrunt.hcl'"]
+
+[merge-tools.zed]
+diff-args = ["--diff", "$left", "$right"]

@@ -1,3 +1,16 @@
 [ui.theme]
 light = "base16-gruvbox-light"
 dark = "base16-gruvbox-dark"
+
+[custom_commands.diff]
+key = ["ctrl+d"]
+lua = '''
+local rev = table.concat(revisions.checked(), "|")
+if rev == "" then
+  rev = revisions.current()
+end
+jj("diff", "--tool", "zed", "-r", rev)
+
+'''
+
+# context.change_id())
