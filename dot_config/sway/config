@@ -22,14 +22,14 @@ output eDP-1 {
     mode 2880x1800@120.000Hz
     scale 2
 
-    position 0 700
+    position 240 1080
 }
 
 output "Dell Inc. DELL U2723QE 9Z41H34" {
     mode 3840x2160@59.997Hz
     scale 2
 
-    position 1440 0
+    position 0 0
 }
 
 output "LG Electronics LG HDR 4K 0x0007BFBF" {
@@ -61,6 +61,7 @@ exec systemctl --user import-environment XDG_DATA_DIRS
 exec systemd-cat waybar
 
 # background GUI services
+exec systemd-cat lxpolkit
 exec systemd-cat swaync
 exec systemd-cat --identifier=geoclue /usr/libexec/geoclue-2.0/demos/agent
 exec systemd-cat gammastep
@@ -271,8 +272,6 @@ bindsym --to-code $mod+r mode "resize"
 
     bindsym --to-code $mod+Shift+n exec swaync-client -t -sw
 
-    bindsym --to-code XF86SelectiveScreenshot input "1739:53160:SYNA802E:00_06CB:CFA8_Touchpad" events toggle enabled disabled
-
     # Special keys to adjust volume via PulseAudio
     bindsym --to-code --locked XF86AudioMute exec \
         'wpctl set-mute \@DEFAULT_SINK@ toggle; wob-volume.sh'
@@ -288,7 +287,18 @@ bindsym --to-code $mod+r mode "resize"
     bindsym --to-code --locked XF86AudioMicMute exec \
         'wpctl set-mute \@DEFAULT_SOURCE@ toggle; wob-volume.sh \@DEFAULT_SOURCE@'
 
-    bindsym --to-code --locked XF86NotificationCenter exec playerctl play-pause
+    # music control on internal kbd
+    bindsym --to-code --locked Print exec playerctl previous
+    bindsym --to-code --locked XF86SelectiveScreenshot exec playerctl play-pause
+    bindcode --locked 455 exec playerctl next
+
+    # toggle touchpad
+    bindsym --to-code XF86Favorites input "1739:53160:SYNA802E:00_06CB:CFA8_Touchpad" events toggle enabled disabled
+
+    # music control on ext kbd
+    # bindsym --to-code --locked XF86Tools exec playerctl previous
+    # bindsym --to-code --locked XF86Bluetooth exec playerctl play-pause
+    # bindcode --locked 374 exec playerctl next
 
     # Special keys to adjust brightness via brightnessctl
     bindsym --to-code --locked XF86MonBrightnessDown exec \
@@ -337,7 +347,7 @@ for_window [app_id="^gcr-prompter$"] floating enable, sticky enable
 for_window [title="^Picture-in-Picture$"] floating enable, sticky enable
 for_window [app_id="^io.github.slgobinath.SafeEyes$"] floating enable, sticky enable
 for_window [app_id="^it.mijorus.smile$"] floating enable, sticky enable, border pixel 0
-for_window [app_id="^mpv$"] floating enable, sticky enable
+for_window [app_id="^mpv$"] floating enable
 
 for_window [app_id="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
 
