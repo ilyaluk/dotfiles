@@ -52,12 +52,40 @@ unfunction zed
 ZSH_HIGHLIGHT_STYLES[comment]=fg=blue
 zstyle :compinstall filename "$USER/.zshrc"
 
+export CDPATH=~/fb
+
 function cd() {
-    if [[ -f "$1" ]]; then
-        __zoxide_z "$(dirname "$1")"
+    local d="$(dirname -- "$1")"
+    # be able to cd into path of deleted files from commit stat
+    # but don't cd into existing directories
+    if [ ! -d "$1" ] && [ "$d" != "." ] && [ -d "$d" ]; then
+        __zoxide_z "$d"
     else
         __zoxide_z "$@"
     fi
+
+    echo ${PWD/#$HOME/\~}
+}
+
+
+function cdd() {
+    # last arg
+    cd "${@: -1}"
+}
+
+function _cdd_complete() {
+    local rev="@"
+    if (( CURRENT > 2 )); then
+        rev="${words[2]}"
+    fi
+    local files
+    files=(${(f)"$(jj show -r "$rev" --name-only -T '' 2>/dev/null)"})
+    if [[ ${#files[@]} -eq 0 && "$rev" == "@" ]]; then
+        # if current rev is empty, try previous commit
+        rev="@-"
+        files=(${(f)"$(jj show -r "$rev" --name-only -T '' 2>/dev/null)"})
+    fi
+    _describe "jj files from $rev" files
 }
 
 # ================================================
@@ -173,6 +201,7 @@ autoload -Uz compinit && compinit
 complete -C "$(which aws_completer)" aws
 complete -o nospace -C "$(which terraform)" terraform
 complete -o nospace -C "$(which terragrunt)" terragrunt
+compdef _cdd_complete cdd
 
 for f in ~/.zsh/completions/*; source $f
 source ~/.zsh/rc
@@ -180,6 +209,7 @@ source ~/.zsh/rc
 # ================================================
 # Apps config
 # ================================================
+export SUDO_ASKPASS=/usr/bin/ssh-askpass
 export GIT_TERMINAL_PROMPT=1
 export LESS="RSXF"
 export TG_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
@@ -236,6 +266,7 @@ alias jl='jj log'
 alias jn='jj next || jj new'
 alias jp='jj prev'
 alias je='jj edit'
+alias jd='jj diff'
 alias js='jj squash'
 alias jz='jj z'
 alias jza='jj za'
@@ -278,7 +309,7 @@ function newpr() {
         suggest=$(
             jj log -r "${base}..@" --patch | \
             llm -m claude-sonnet-4.5 -s \
-                'Generate a short git branch name based on the log and patches. Use following format: "{user}/{ticket-}{name}". User should be short name. If none of commits have ticket reference, do not include it. Ticket should be upcase, user/name lowercase. Your response should ONLY include branch name.'
+	    'Generate a short git branch name based on the log and patches. Use following format: "{user}/{TICKET-}{name}". User should be short name. If none of commits have ticket reference, do not include it. Ticket should be uppercase, user and branch name lowercase (e.g. ilya/DVO-123-do-stuff). Your response should ONLY include branch name. It CAN be partially upper case.'
             )
         echo "Enter branch name. LLM suggested: ${suggest} (enter to accept)"
         read branch
