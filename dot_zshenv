@@ -1,0 +1,19 @@
+# ~/.zshenv — sourced for *every* zsh invocation, including non-interactive
+# `zsh -c` (unlike ~/.zshrc, which only runs for interactive shells).
+#
+# Why this file exists:
+# Tools such as Claude Code's Bash tool run commands in a non-interactive
+# `zsh -c` and restore a *snapshot* of the interactive shell's functions
+# (custom `cd`, grml's `chpwd` dirstack hook, zoxide's hooks/doctor). The
+# snapshot captures functions but NOT the runtime parameters those functions
+# read, which are normally set while ~/.zshrc + grml init run. Result:
+#   * grml `chpwd` runs `(( $DIRSTACKSIZE <= 0 ))` with an empty DIRSTACKSIZE
+#     -> "chpwd:2: bad math expression: operand expected at `<= 0 '"
+#   * zoxide's doctor sees an empty `chpwd_functions` (hook not "registered")
+#     -> spurious "zoxide: detected a possible configuration issue." warning
+# Provide the missing defaults for non-interactive shells only, so interactive
+# behavior (including the zoxide doctor) is left untouched.
+if [[ ! -o interactive ]]; then
+    : ${DIRSTACKSIZE:=20}   # grml chpwd hook: avoid empty-operand math
+    export _ZO_DOCTOR=0     # zoxide doctor: hook genuinely unregistered here
+fi
