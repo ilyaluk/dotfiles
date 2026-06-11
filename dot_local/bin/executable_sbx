@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+SBX_NO_TELEMETRY=1 $HOME/.docker/sbx/bin/sbx "$@"
