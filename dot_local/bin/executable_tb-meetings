@@ -61,6 +61,7 @@ DEFAULTS = {
     "cache_ttl": 600,        # re-read the DB at most this often (seconds)
     "waybar_signal": 8,      # SIGRTMIN+N used by `refresh` (must match config.jsonc)
     "max_title": 32,         # bar label truncation
+    "browser": "",           # command for VC links; empty ⇒ xdg-open. "{url}" = URL slot
     "included_calendars": [],  # empty ⇒ all cached calendars
 }
 
@@ -193,6 +194,10 @@ def write_default_config(reg: dict[str, dict]) -> None:
         f"days_ahead = {DEFAULTS['days_ahead']}        # dropdown horizon: 0=today, 1=+tomorrow",
         f"cache_ttl = {DEFAULTS['cache_ttl']}      # seconds between DB re-reads",
         f"waybar_signal = {DEFAULTS['waybar_signal']}       # SIGRTMIN+N (keep in sync with config.jsonc)",
+        "",
+        "# Command used to open video-call links. Empty ⇒ xdg-open (system default).",
+        "# The URL is appended, or substituted for a literal {url} token if present.",
+        '# browser = "flatpak run org.chromium.Chromium"',
         "",
         "included_calendars = [",
     ]
@@ -572,7 +577,7 @@ def cmd_dropdown() -> None:
         return
     chosen = entries[idx]
     if chosen["action"] == "join" and chosen["arg"]:
-        open_link(chosen["arg"])
+        open_link(chosen["arg"], cfg.get("browser", ""))
     else:
         open_calendar()
 
@@ -590,12 +595,21 @@ def cmd_join() -> None:
     if not target:
         notify("No meeting to join", "No ongoing or imminent meeting with a video link.")
         return
-    open_link(target[0]["link"])
+    open_link(target[0]["link"], cfg.get("browser", ""))
 
 
 # ── actions ──────────────────────────────────────────────────────────────────
-def open_link(url: str) -> None:
-    subprocess.Popen(["xdg-open", url], start_new_session=True,
+def open_link(url: str, browser: str = "") -> None:
+    if browser:
+        import shlex
+        cmd = shlex.split(browser)
+        if any("{url}" in tok for tok in cmd):
+            cmd = [tok.replace("{url}", url) for tok in cmd]
+        else:
+            cmd.append(url)
+    else:
+        cmd = ["xdg-open", url]
+    subprocess.Popen(cmd, start_new_session=True,
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
