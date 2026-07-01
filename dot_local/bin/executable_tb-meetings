@@ -524,12 +524,14 @@ def cmd_waybar() -> None:
         if len(title) > cfg["max_title"]:
             title = title[: cfg["max_title"] - 1] + "…"
         link = ICON_VIDEO + " " if o["link"] else ""
-        text = f"{ICON_ACTIVE} {link}{pango_escape(title)} · {detail}"
+        text = f"{ICON_ACTIVE} {link}{pango_escape(title)} {detail}"
 
     tooltip = build_tooltip(occs, now, tz, cfg)
-    if o is not None:  # surface the active meeting + countdown at the top of the tooltip
+    # Only in compact mode (bar = icon only) surface the active meeting +
+    # countdown atop the tooltip; otherwise the bar label already shows it.
+    if o is not None and cfg.get("compact", True):
         vid = f" {ICON_VIDEO}" if o["link"] else ""
-        tooltip = f"<b>{active_icon}  {pango_escape(o['title'])}{vid} · {detail}</b>\n\n" + tooltip
+        tooltip = f"<b>{active_icon} {pango_escape(o['title'])}{vid} · {detail}</b>\n\n" + tooltip
 
     print(json.dumps({
         "text": text,
@@ -542,6 +544,10 @@ def cmd_waybar() -> None:
 def build_tooltip(occs: list[dict], now: datetime, tz: ZoneInfo, cfg: dict) -> str:
     if not occs:
         return "<b>No meetings</b> today or tomorrow"
+    # "closest" meeting = ongoing or next upcoming timed event -> shown bold.
+    upcoming = sorted((o for o in occs if not o["all_day"] and parse(o["end"]) > now),
+                      key=lambda o: o["start"])
+    closest = upcoming[0] if upcoming else None
     lines: list[str] = []
     labels = {0: "Today", 1: "Tomorrow"}
     by_day: dict[str, list[dict]] = {}
@@ -554,13 +560,16 @@ def build_tooltip(occs: list[dict], now: datetime, tz: ZoneInfo, cfg: dict) -> s
         lines.append(f"<b>{label}</b>")
         for o in by_day[dayiso]:
             s, e = parse(o["start"]), parse(o["end"])
-            ongoing = s <= now < e
-            bullet = "● " if ongoing else ""
             when = "all-day" if o["all_day"] else f"{s:%H:%M}"
             mark = f" {ICON_VIDEO}" if o["link"] else ""
-            row = f"  {bullet}<tt>{when:>7}</tt>  {pango_escape(o['title'])}{mark}"
-            if ongoing:
-                row = f"<span foreground='{o['color']}'>{row}</span>"
+            row = f"<tt>{when}</tt> {pango_escape(o['title'])}{mark}"
+            if e <= now:                       # past -> strikethrough
+                row = f"<s>{row}</s>"
+            else:
+                if o is closest:               # next/ongoing -> bold
+                    row = f"<b>{row}</b>"
+                if s <= now < e:               # ongoing -> colour
+                    row = f"<span foreground='{o['color']}'>{row}</span>"
             lines.append(row)
     return "\n".join(lines)
 
@@ -594,16 +603,25 @@ def cmd_list_calendars() -> None:
 def cmd_dropdown() -> None:
     occs, cfg, tz = get_occurrences()
     now = datetime.now(tz)
+    today = now.date()
+
+    def bucket(o):  # 0 = upcoming today, 1 = past today, 2 = tomorrow onwards
+        s, e = parse(o["start"]), parse(o["end"])
+        if s.date() == today:
+            return 0 if e > now else 1
+        return 2
+
+    ordered = sorted(occs, key=lambda o: (bucket(o), o["start"]))
+    labels = {0: "Today", 1: "Tomorrow"}
     entries: list[dict] = []   # {label, action, arg}
-    labels = {0: "Today", 1: "Tom"}
-    for o in occs:
+    for o in ordered:
         s, e = parse(o["start"]), parse(o["end"])
         offset = (s.date() - now.date()).days
         day = labels.get(offset, s.strftime("%a"))
-        when = "all-day  " if o["all_day"] else f"{s:%H:%M}–{e:%H:%M}"
+        when = "all-day" if o["all_day"] else f"{s:%H:%M}–{e:%H:%M}"
         state = "● " if (not o["all_day"] and s <= now < e) else "  "
         mark = f" {o['link_icon'] or ICON_VIDEO}" if o["link"] else ""
-        label = f"{state}{day:>3} {when}  {o['title']}{mark}"
+        label = f"{state}{day} {when}  {o['title']}{mark}"
         entries.append({"label": label,
                         "action": "join" if o["link"] else "calendar",
                         "arg": o["link"]})
