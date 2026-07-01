@@ -8,9 +8,9 @@
 # ///
 """tb-meetings — Thunderbird upcoming-meetings widget for Waybar.
 
-Reads events straight from Thunderbird's calendar SQLite cache (read-only,
-immutable), expands recurrence with icalendar + dateutil, and drives a Waybar
-custom module. Passive calendar icon when idle; goes active (name + countdown)
+Reads events straight from Thunderbird's calendar SQLite cache via a read-only,
+WAL-inclusive snapshot (see open_calendar_snapshot), expands recurrence with
+icalendar + dateutil, and drives a Waybar custom module. Passive calendar icon when idle; goes active (name + countdown)
 when a timed event is ongoing or starts within `soon_minutes`.
 
 Subcommands:
@@ -36,6 +36,7 @@ import shutil
 import sqlite3
 import subprocess
 import sys
+import tempfile
 import tomllib
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -320,23 +321,65 @@ WHERE e.cal_id IN (__CALS__) AND (e.offline_journal IS NULL OR e.offline_journal
 """
 
 
+def open_calendar_snapshot(src: Path):
+    """Return (connection, tmpdir|None) for reading Thunderbird's calendar DB.
+
+    TB keeps cache.sqlite open with locking_mode=EXCLUSIVE, so every lock-taking
+    access (mode=ro, the backup API, VACUUM INTO, sqlite3_rsync) is refused with
+    SQLITE_BUSY (see sqlite.org/wal.html), and `immutable=1` — the only lock-free
+    official read — ignores the -wal, missing everything TB has synced since its
+    last checkpoint (that WAL can hold many MB for a long time).
+
+    So copy the main db together with its -wal (sqlite.org/howtocorrupt.html:
+    the -wal must be kept with the db) into a temp dir and read the copy. Copying
+    only *reads* the originals — it never writes to or locks TB's files, and
+    POSIX locks are per-process, so TB is unaffected. A copy grabbed mid-write /
+    mid-checkpoint can be internally inconsistent, so we validate it with
+    quick_check and fall back to a plain immutable (main-only, possibly stale)
+    read if it is unusable.
+    """
+    wal = Path(str(src) + "-wal")
+    if wal.exists() and wal.stat().st_size > 0:
+        tmpdir = None
+        try:
+            tmpdir = Path(tempfile.mkdtemp(prefix="tb-meetings-db."))
+            dst = tmpdir / "cache.sqlite"
+            # -wal first, then main: the copied main is then never older than the
+            # copied wal, so we never apply stale wal frames over a newer db.
+            shutil.copy2(wal, str(dst) + "-wal")
+            shutil.copy2(src, dst)
+            con = sqlite3.connect(f"file:{dst}", uri=True)
+            if (con.execute("PRAGMA quick_check(1)").fetchone() or ["?"])[0] != "ok":
+                raise sqlite3.DatabaseError("snapshot failed quick_check")
+            con.row_factory = sqlite3.Row
+            return con, tmpdir
+        except sqlite3.DatabaseError as e:
+            log(f"WAL snapshot unusable ({e}); falling back to immutable read")
+            if tmpdir is not None:
+                shutil.rmtree(tmpdir, ignore_errors=True)
+    con = sqlite3.connect(f"file:{src}?immutable=1", uri=True)
+    con.row_factory = sqlite3.Row
+    return con, None
+
+
 def read_events(profile: Path, cal_ids: list[str], reg: dict, tz: ZoneInfo,
                 win_a: datetime, win_b: datetime) -> list[dict]:
     if not cal_ids:
         return []
-    db = profile / "calendar-data" / "cache.sqlite"
-    con = sqlite3.connect(f"file:{db}?immutable=1", uri=True)
-    con.row_factory = sqlite3.Row
-    ph = ",".join("?" * len(cal_ids))
-    rows = con.execute(SQL.replace("__CALS__", ph),
-                       (*cal_ids, to_us(win_b), to_us(win_a))).fetchall()
-
-    overrides: dict[tuple, sqlite3.Row] = {}
-    for o in con.execute(
-        f"SELECT id,cal_id,recurrence_id,event_start,event_end,ical_status "
-        f"FROM cal_events WHERE cal_id IN ({ph}) AND recurrence_id IS NOT NULL", tuple(cal_ids)):
-        overrides[(o["cal_id"], o["id"], o["recurrence_id"])] = o
-    con.close()
+    con, tmpdir = open_calendar_snapshot(profile / "calendar-data" / "cache.sqlite")
+    try:
+        ph = ",".join("?" * len(cal_ids))
+        rows = con.execute(SQL.replace("__CALS__", ph),
+                           (*cal_ids, to_us(win_b), to_us(win_a))).fetchall()
+        overrides: dict[tuple, sqlite3.Row] = {}
+        for o in con.execute(
+            f"SELECT id,cal_id,recurrence_id,event_start,event_end,ical_status "
+            f"FROM cal_events WHERE cal_id IN ({ph}) AND recurrence_id IS NOT NULL", tuple(cal_ids)):
+            overrides[(o["cal_id"], o["id"], o["recurrence_id"])] = o
+    finally:
+        con.close()
+        if tmpdir is not None:
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
     occs: list[dict] = []
     for r in rows:
