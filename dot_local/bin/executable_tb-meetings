@@ -1,0 +1,662 @@
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "icalendar==7.2.0",
+#     "python-dateutil==2.9.0.post0",
+# ]
+# ///
+"""tb-meetings — Thunderbird upcoming-meetings widget for Waybar.
+
+Reads events straight from Thunderbird's calendar SQLite cache (read-only,
+immutable), expands recurrence with icalendar + dateutil, and drives a Waybar
+custom module. Passive calendar icon when idle; goes active (name + countdown)
+when a timed event is ongoing or starts within `soon_minutes`.
+
+Subcommands:
+  waybar          Emit one JSON line for the Waybar custom module (default).
+  list-calendars  List calendars with their IDs / colours / selected state.
+  dropdown        Show today+tomorrow agenda in fuzzel; join or open on select.
+  join            Open the video link of the ongoing / next meeting.
+  open-calendar   Open Thunderbird's calendar view (and raise it under Sway).
+  refresh         Drop the cache and poke Waybar to redraw immediately.
+
+Data flow: Thunderbird syncs CalDAV on its own timer (no external force-sync
+exists), so this just re-reads the DB. Expanded occurrences are cached under
+$XDG_CACHE_HOME for `cache_ttl` seconds so the per-minute Waybar tick is cheap
+(no DB parse / no icalendar import on a cache hit).
+"""
+from __future__ import annotations
+
+import configparser
+import json
+import os
+import re
+import shutil
+import sqlite3
+import subprocess
+import sys
+import tomllib
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+# ── glyphs (JetBrainsMono Nerd Font; all verified present) ───────────────────
+ICON_PASSIVE = "\U000F00ED"   # 󰃭 md-calendar
+ICON_ACTIVE = "\U000F0954"    # 󰥔 md-calendar-clock
+ICON_VIDEO = "\U000F0567"     # 󰕧 md-video
+ICON_LOC = "\U000F034E"       # 󰍎 md-map-marker
+ICON_PEOPLE = "\U000F0849"    # 󰡉 md-account-group
+ICON_GOOGLE = "\U000F02AD"    # 󰊭 md-google
+ICON_TEAMS = "\U000F0D0B"     # 󰴋 md-microsoft-teams
+
+HOME = Path.home()
+TB_ROOT = HOME / ".thunderbird"
+CONFIG_PATH = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config")) / "tb-meetings" / "config.toml"
+CACHE_PATH = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache")) / "tb-meetings" / "events.json"
+
+DEFAULTS = {
+    "soon_minutes": 10,      # go active this many minutes before a meeting
+    "days_ahead": 1,         # dropdown/tooltip horizon (0 = today only, 1 = +tomorrow)
+    "cache_ttl": 600,        # re-read the DB at most this often (seconds)
+    "waybar_signal": 8,      # SIGRTMIN+N used by `refresh` (must match config.jsonc)
+    "max_title": 32,         # bar label truncation
+    "included_calendars": [],  # empty ⇒ all cached calendars
+}
+
+# ── video-call link extraction (priority + regexes; see research notes) ──────
+LINK_PATTERNS = [
+    ("google_meet", ICON_GOOGLE, re.compile(r"https://meet\.google\.com/(?:lookup/)?[a-z]{3}-[a-z]{4}-[a-z]{3}(?:\?[^\s\"'<>]*)?", re.I)),
+    ("teams", ICON_TEAMS, re.compile(r"https://teams\.(?:microsoft\.com|microsoft\.us|live\.com)/l/meetup-join/[^\s\"'<>]+", re.I)),
+    ("teams", ICON_TEAMS, re.compile(r"https://teams\.live\.com/meet/[^\s\"'<>]+", re.I)),
+    ("zoom", ICON_VIDEO, re.compile(r"https://(?:[a-z0-9.-]+\.)?zoom\.(?:us|com)/(?:j/\d+|my/[a-z0-9.]+|w/\d+)(?:\?[^\s\"'<>]*)?", re.I)),
+    ("whereby", ICON_VIDEO, re.compile(r"https://(?:[a-z0-9-]+\.)?whereby\.com/[A-Za-z0-9._-]+(?:\?[^\s\"'<>]*)?", re.I)),
+    ("jitsi", ICON_VIDEO, re.compile(r"https://meet\.jit\.si/[^\s\"'<>?]+(?:\?[^\s\"'<>]*)?", re.I)),
+]
+
+
+def ics_unescape(s: str | None) -> str:
+    if not s:
+        return ""
+    return s.replace("\\n", "\n").replace("\\N", "\n").replace("\\,", ",").replace("\\;", ";").replace("\\\\", "\\")
+
+
+def find_link(conf: str | None, description: str | None, location: str | None, url: str | None):
+    """Return (icon, url) for the best join link, or (None, None)."""
+    # 1) canonical provider X-property (already a bare URL).
+    if conf and conf.strip().lower().startswith("http"):
+        u = conf.strip()
+        icon = ICON_GOOGLE if "meet.google.com" in u else (ICON_TEAMS if "teams." in u else ICON_VIDEO)
+        return icon, u
+    # 2) scan the text fields in priority order for a known provider.
+    for blob in (ics_unescape(description), ics_unescape(location), ics_unescape(url)):
+        if not blob:
+            continue
+        for _name, icon, rx in LINK_PATTERNS:
+            m = rx.search(blob)
+            if m:
+                return icon, m.group(0).rstrip(">).,\"'")
+    # 3) http(s) URL field as last resort (TB's URL is often a message: URI — skip those).
+    if url and url.strip().lower().startswith("http"):
+        return ICON_VIDEO, url.strip()
+    return None, None
+
+
+# ── Thunderbird profile / calendar registry ──────────────────────────────────
+def find_profile() -> Path:
+    ini = configparser.ConfigParser()
+    ini.read(TB_ROOT / "profiles.ini")
+    cands: list[Path] = []
+    for s in ini.sections():
+        if ini.has_option(s, "Path"):
+            rel = ini.getboolean(s, "IsRelative", fallback=True)
+            cands.append((TB_ROOT / ini.get(s, "Path")) if rel else Path(ini.get(s, "Path")))
+    # the running instance holds a lock in its profile dir.
+    for p in cands:
+        if (p / "lock").exists() or (p / ".parentlock").exists():
+            return p
+    for s in ini.sections():
+        if s.startswith("Install") and ini.has_option(s, "Default"):
+            return TB_ROOT / ini.get(s, "Default")
+    if not cands:
+        die("no Thunderbird profile found")
+    return cands[0]
+
+
+def load_registry(profile: Path) -> dict[str, dict]:
+    """Parse calendar.registry.* from prefs.js → {uuid: {key: value}}."""
+    prefs = (profile / "prefs.js").read_text(errors="replace")
+    rx = re.compile(r'user_pref\("calendar\.registry\.([0-9a-fA-F-]{36})\.([^"]+)",\s*(.*?)\);')
+    cals: dict[str, dict] = {}
+    for uuid, key, raw in rx.findall(prefs):
+        v: object = raw.strip()
+        if isinstance(v, str) and v.startswith('"') and v.endswith('"'):
+            v = v[1:-1]
+        elif v == "true":
+            v = True
+        elif v == "false":
+            v = False
+        cals.setdefault(uuid, {})[key] = v
+    return cals
+
+
+def local_timezone(profile: Path) -> ZoneInfo:
+    try:
+        prefs = (profile / "prefs.js").read_text(errors="replace")
+        m = re.search(r'user_pref\("calendar\.timezone\.local",\s*"([^"]+)"\);', prefs)
+        if m:
+            return ZoneInfo(m.group(1))
+    except Exception:
+        pass
+    try:
+        return ZoneInfo(str(datetime.now().astimezone().tzinfo))
+    except Exception:
+        return ZoneInfo("UTC")
+
+
+def cached_calendars(reg: dict[str, dict]) -> list[str]:
+    """UUIDs whose events live in cache.sqlite (caldav + offline cache enabled)."""
+    return [u for u, c in reg.items()
+            if c.get("type") == "caldav" and c.get("cache.enabled") is True and not c.get("disabled")]
+
+
+def selected_calendars(reg: dict[str, dict], cfg: dict) -> list[str]:
+    cached = cached_calendars(reg)
+    inc = cfg.get("included_calendars") or []
+    if not inc:
+        return cached
+    return [u for u in inc if u in reg]
+
+
+# ── config ───────────────────────────────────────────────────────────────────
+def load_config(reg: dict[str, dict]) -> dict:
+    cfg = dict(DEFAULTS)
+    if CONFIG_PATH.exists():
+        try:
+            cfg.update(tomllib.loads(CONFIG_PATH.read_text()))
+        except Exception as e:
+            log(f"config parse error ({e}); using defaults")
+    else:
+        write_default_config(reg)
+        cfg["included_calendars"] = cached_calendars(reg)
+    return cfg
+
+
+def write_default_config(reg: dict[str, dict]) -> None:
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# tb-meetings configuration.",
+        "# Run `tb-meetings list-calendars` to see all calendar IDs.",
+        "# Comment out an entry in included_calendars to hide that calendar.",
+        "",
+        f"soon_minutes = {DEFAULTS['soon_minutes']}   # go active this many min before a meeting",
+        f"days_ahead = {DEFAULTS['days_ahead']}        # dropdown horizon: 0=today, 1=+tomorrow",
+        f"cache_ttl = {DEFAULTS['cache_ttl']}      # seconds between DB re-reads",
+        f"waybar_signal = {DEFAULTS['waybar_signal']}       # SIGRTMIN+N (keep in sync with config.jsonc)",
+        "",
+        "included_calendars = [",
+    ]
+    for u in cached_calendars(reg):
+        lines.append(f'  "{u}",  # {reg[u].get("name", "?")}')
+    lines.append("]")
+    CONFIG_PATH.write_text("\n".join(lines) + "\n")
+    log(f"wrote default config to {CONFIG_PATH}")
+
+
+# ── time helpers ─────────────────────────────────────────────────────────────
+def prtime_to_utc(us: int) -> datetime:
+    return datetime.fromtimestamp(us / 1_000_000, tz=timezone.utc)
+
+
+def to_us(dt: datetime) -> int:
+    return int(dt.timestamp() * 1_000_000)
+
+
+def build_dtstart(event_start: int, tz: str | None, all_day: bool):
+    u = prtime_to_utc(event_start)
+    if all_day:
+        return u.date()
+    if tz in (None, "", "UTC"):
+        return u
+    if tz == "floating":
+        return u.replace(tzinfo=None)
+    try:
+        return u.astimezone(ZoneInfo(tz))
+    except Exception:
+        return u
+
+
+# ── recurrence expansion (icalendar + dateutil; imported lazily) ─────────────
+def expand_master(dtstart, duration: timedelta, recurrence_ical: str | None,
+                  win_a: datetime, win_b: datetime) -> list[tuple]:
+    from dateutil.rrule import rrulestr, rruleset
+    from icalendar import Calendar
+
+    all_day = isinstance(dtstart, date) and not isinstance(dtstart, datetime)
+    if all_day:
+        ds_line = f"DTSTART;VALUE=DATE:{dtstart:%Y%m%d}"
+    elif dtstart.tzinfo is None:
+        ds_line = f"DTSTART:{dtstart:%Y%m%dT%H%M%S}"
+    elif getattr(dtstart.tzinfo, "key", "") in ("UTC", "") or dtstart.tzinfo == timezone.utc:
+        ds_line = f"DTSTART:{dtstart.astimezone(timezone.utc):%Y%m%dT%H%M%S}Z"
+    else:
+        ds_line = f"DTSTART;TZID={dtstart.tzinfo.key}:{dtstart:%Y%m%dT%H%M%S}"
+
+    body = "\r\n".join([
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//tb-meetings//EN",
+        "BEGIN:VEVENT", "UID:x", ds_line,
+        *((recurrence_ical or "").splitlines()),
+        "END:VEVENT", "END:VCALENDAR",
+    ])
+    ev = Calendar.from_ical(body).walk("VEVENT")[0]
+
+    base = datetime.combine(dtstart, datetime.min.time()) if all_day else dtstart
+    rs = rruleset()
+    rrules = ev.get("RRULE")
+    if rrules:
+        for r in (rrules if isinstance(rrules, list) else [rrules]):
+            rs.rrule(rrulestr(r.to_ical().decode(), dtstart=base))
+    else:
+        rs.rdate(base)
+
+    def norm(item):
+        d = item.dt if hasattr(item, "dt") else item
+        if all_day:
+            if isinstance(d, datetime):
+                d = d.date()
+            return datetime.combine(d, datetime.min.time())
+        return d
+
+    for prop, add in (("EXDATE", rs.exdate), ("RDATE", rs.rdate)):
+        vals = ev.get(prop)
+        if not vals:
+            continue
+        for v in (vals if isinstance(vals, list) else [vals]):
+            for item in getattr(v, "dts", [v]):
+                add(norm(item))
+
+    if all_day or base.tzinfo is None:
+        a, b = win_a.replace(tzinfo=None), win_b.replace(tzinfo=None)
+    else:
+        a, b = win_a, win_b
+
+    out = []
+    for occ in rs.between(a - duration, b, inc=True):
+        end = occ + duration
+        if end <= a:
+            continue
+        occ_us = to_us(occ if occ.tzinfo else occ.replace(tzinfo=timezone.utc))
+        out.append((occ, end, occ_us))
+    return out
+
+
+# ── DB read → occurrences ────────────────────────────────────────────────────
+SQL = """
+SELECT e.cal_id, e.id, e.title, e.event_start, e.event_start_tz, e.event_end,
+  (e.flags & 8)=8 AS all_day, (e.flags & 16)=16 AS recurring,
+  (SELECT COUNT(*) FROM cal_attendees a WHERE a.item_id=e.id AND a.cal_id=e.cal_id
+     AND a.recurrence_id IS e.recurrence_id AND a.icalString LIKE 'ATTENDEE%') AS n_att,
+  (SELECT CAST(p.value AS TEXT) FROM cal_properties p WHERE p.item_id=e.id AND p.cal_id=e.cal_id
+     AND p.recurrence_id IS e.recurrence_id AND p.key='LOCATION' LIMIT 1) AS location,
+  (SELECT CAST(p.value AS TEXT) FROM cal_properties p WHERE p.item_id=e.id AND p.cal_id=e.cal_id
+     AND p.recurrence_id IS e.recurrence_id AND p.key='DESCRIPTION' LIMIT 1) AS description,
+  (SELECT CAST(p.value AS TEXT) FROM cal_properties p WHERE p.item_id=e.id AND p.cal_id=e.cal_id
+     AND p.recurrence_id IS e.recurrence_id AND p.key='URL' LIMIT 1) AS url,
+  (SELECT CAST(p.value AS TEXT) FROM cal_properties p WHERE p.item_id=e.id AND p.cal_id=e.cal_id
+     AND p.key IN ('X-GOOGLE-CONFERENCE','X-MICROSOFT-SKYPETEAMSMEETINGURL') LIMIT 1) AS conf,
+  (SELECT group_concat(r.icalString, char(10)) FROM cal_recurrence r
+     WHERE r.item_id=e.id AND r.cal_id=e.cal_id) AS rec_ical
+FROM cal_events e
+WHERE e.cal_id IN (__CALS__) AND (e.offline_journal IS NULL OR e.offline_journal!=3)
+  AND ( (e.recurrence_id IS NULL AND (e.flags&16)=0 AND e.event_start < ? AND e.event_end > ?)
+     OR (e.recurrence_id IS NULL AND (e.flags&16)=16) )
+"""
+
+
+def read_events(profile: Path, cal_ids: list[str], reg: dict, tz: ZoneInfo,
+                win_a: datetime, win_b: datetime) -> list[dict]:
+    if not cal_ids:
+        return []
+    db = profile / "calendar-data" / "cache.sqlite"
+    con = sqlite3.connect(f"file:{db}?immutable=1", uri=True)
+    con.row_factory = sqlite3.Row
+    ph = ",".join("?" * len(cal_ids))
+    rows = con.execute(SQL.replace("__CALS__", ph),
+                       (*cal_ids, to_us(win_b), to_us(win_a))).fetchall()
+
+    overrides: dict[tuple, sqlite3.Row] = {}
+    for o in con.execute(
+        f"SELECT id,cal_id,recurrence_id,event_start,event_end,ical_status "
+        f"FROM cal_events WHERE cal_id IN ({ph}) AND recurrence_id IS NOT NULL", tuple(cal_ids)):
+        overrides[(o["cal_id"], o["id"], o["recurrence_id"])] = o
+    con.close()
+
+    occs: list[dict] = []
+    for r in rows:
+        all_day = bool(r["all_day"])
+        dur = timedelta(microseconds=r["event_end"] - r["event_start"])
+        if r["recurring"]:
+            ds = build_dtstart(r["event_start"], r["event_start_tz"], all_day)
+            try:
+                spans = expand_master(ds, dur, r["rec_ical"], win_a, win_b)
+            except Exception as e:
+                log(f"expand failed for {r['title']!r}: {e}")
+                continue
+        else:
+            s = prtime_to_utc(r["event_start"])
+            spans = [(s, prtime_to_utc(r["event_end"]), r["event_start"])]
+
+        icon, link = find_link(r["conf"], r["description"], r["location"], r["url"])
+        for (start, end, occ_us) in spans:
+            ov = overrides.get((r["cal_id"], r["id"], occ_us))
+            if ov is not None:
+                if (ov["ical_status"] or "") == "CANCELLED":
+                    continue
+                start, end = prtime_to_utc(ov["event_start"]), prtime_to_utc(ov["event_end"])
+            sl, el = as_local(start, tz), as_local(end, tz)
+            if sl >= win_b:   # strict upper bound so days_ahead is exact
+                continue
+            occs.append({
+                "cal": reg.get(r["cal_id"], {}).get("name", r["cal_id"]),
+                "color": reg.get(r["cal_id"], {}).get("color", "#888888"),
+                "title": (r["title"] or "(untitled)").strip(),
+                "start": sl.isoformat(),
+                "end": el.isoformat(),
+                "all_day": all_day,
+                "n_att": r["n_att"] or 0,
+                "link": link,
+                "link_icon": icon,
+                "location": (ics_unescape(r["location"]).strip() or None),
+            })
+
+    # dedupe genuine cross-source duplicates (same minute + same title); keep richest.
+    occs.sort(key=lambda o: (0 if o["link"] else 1, -o["n_att"]))
+    seen: dict[tuple, dict] = {}
+    for o in occs:
+        key = (o["start"][:16], o["title"].casefold())
+        seen.setdefault(key, o)
+    result = list(seen.values())
+    result.sort(key=lambda o: o["start"])
+    return result
+
+
+def as_local(dt: datetime, tz: ZoneInfo) -> datetime:
+    if isinstance(dt, datetime):
+        return dt.astimezone(tz) if dt.tzinfo else dt.replace(tzinfo=tz)
+    return dt
+
+
+# ── cache ────────────────────────────────────────────────────────────────────
+def get_occurrences(force: bool = False) -> tuple[list[dict], dict, ZoneInfo]:
+    """Return (occurrences, cfg, tz), reading the DB only when the cache is stale."""
+    now = datetime.now().astimezone()
+    cfg_mtime = CONFIG_PATH.stat().st_mtime if CONFIG_PATH.exists() else 0
+    if not force and CACHE_PATH.exists():
+        try:
+            c = json.loads(CACHE_PATH.read_text())
+            fresh = (now.timestamp() - c["fetched_at"]) < c["cache_ttl"]
+            same_day = c["day"] == now.date().isoformat()
+            cfg_ok = c.get("cfg_mtime") == cfg_mtime
+            if fresh and same_day and cfg_ok:
+                return c["occurrences"], c["cfg"], ZoneInfo(c["tz"])
+        except Exception as e:
+            log(f"cache read failed: {e}")
+
+    profile = find_profile()
+    reg = load_registry(profile)
+    cfg = load_config(reg)
+    tz = local_timezone(profile)
+    cal_ids = selected_calendars(reg, cfg)
+
+    today = datetime.now(tz).replace(hour=0, minute=0, second=0, microsecond=0)
+    win_a = today
+    win_b = today + timedelta(days=cfg["days_ahead"] + 1)
+    occs = read_events(profile, cal_ids, reg, tz, win_a, win_b)
+
+    CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = CACHE_PATH.with_suffix(".tmp")
+    tmp.write_text(json.dumps({
+        "fetched_at": now.timestamp(), "day": now.date().isoformat(),
+        "cache_ttl": cfg["cache_ttl"], "cfg_mtime": cfg_mtime,
+        "tz": str(tz), "cfg": cfg, "occurrences": occs,
+    }))
+    tmp.replace(CACHE_PATH)
+    return occs, cfg, tz
+
+
+# ── formatting ───────────────────────────────────────────────────────────────
+def pango_escape(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def fmt_delta(mins: int) -> str:
+    if mins <= 0:
+        return "now"
+    if mins < 60:
+        return f"{mins}m"
+    return f"{mins // 60}h{mins % 60:02d}m"
+
+
+def parse(dt: str) -> datetime:
+    return datetime.fromisoformat(dt)
+
+
+# ── subcommand: waybar ───────────────────────────────────────────────────────
+def cmd_waybar() -> None:
+    occs, cfg, tz = get_occurrences()
+    now = datetime.now(tz)
+    soon = timedelta(minutes=cfg["soon_minutes"])
+    timed = [o for o in occs if not o["all_day"]]
+
+    upcoming = sorted((o for o in timed if timedelta(0) <= parse(o["start"]) - now <= soon),
+                      key=lambda o: o["start"])
+    ongoing = sorted((o for o in timed if parse(o["start"]) <= now < parse(o["end"])),
+                     key=lambda o: o["end"])
+
+    if upcoming:
+        o, state = upcoming[0], "soon"
+        mins = int((parse(o["start"]) - now).total_seconds() // 60)
+        detail = "now" if mins <= 0 else f"in {fmt_delta(mins)}"
+    elif ongoing:
+        o, state = ongoing[0], "ongoing"
+        mins = int((parse(o["end"]) - now).total_seconds() // 60)
+        detail = f"{fmt_delta(mins)} left"
+    else:
+        o, state = None, "passive"
+
+    if o is None:
+        text = ICON_PASSIVE
+    else:
+        title = o["title"]
+        if len(title) > cfg["max_title"]:
+            title = title[: cfg["max_title"] - 1] + "…"
+        link = ICON_VIDEO + " " if o["link"] else ""
+        text = f"{ICON_ACTIVE} {link}{pango_escape(title)} · {detail}"
+
+    print(json.dumps({
+        "text": text,
+        "alt": state,
+        "class": ["meetings", state],
+        "tooltip": build_tooltip(occs, now, tz, cfg),
+    }, ensure_ascii=False))
+
+
+def build_tooltip(occs: list[dict], now: datetime, tz: ZoneInfo, cfg: dict) -> str:
+    if not occs:
+        return "<b>No meetings</b> today or tomorrow"
+    lines: list[str] = []
+    labels = {0: "Today", 1: "Tomorrow"}
+    by_day: dict[str, list[dict]] = {}
+    for o in occs:
+        by_day.setdefault(parse(o["start"]).date().isoformat(), []).append(o)
+    for dayiso in sorted(by_day):
+        d = date.fromisoformat(dayiso)
+        offset = (d - now.date()).days
+        label = labels.get(offset, d.strftime("%a %d %b"))
+        lines.append(f"<b>{label}</b>")
+        for o in by_day[dayiso]:
+            s, e = parse(o["start"]), parse(o["end"])
+            ongoing = s <= now < e
+            bullet = "● " if ongoing else ""
+            when = "all-day" if o["all_day"] else f"{s:%H:%M}"
+            mark = f" {ICON_VIDEO}" if o["link"] else ""
+            row = f"  {bullet}<tt>{when:>7}</tt>  {pango_escape(o['title'])}{mark}"
+            if ongoing:
+                row = f"<span foreground='{o['color']}'>{row}</span>"
+            lines.append(row)
+    return "\n".join(lines)
+
+
+# ── subcommand: list-calendars ───────────────────────────────────────────────
+def cmd_list_calendars() -> None:
+    profile = find_profile()
+    reg = load_registry(profile)
+    cfg = load_config(reg)
+    sel = set(selected_calendars(reg, cfg))
+    cached = set(cached_calendars(reg))
+    order = None
+    try:
+        prefs = (profile / "prefs.js").read_text(errors="replace")
+        m = re.search(r'user_pref\("calendar\.list\.sortOrder",\s*"([^"]+)"\);', prefs)
+        order = m.group(1).split() if m else None
+    except Exception:
+        pass
+    uuids = [u for u in (order or []) if u in reg] + [u for u in reg if not order or u not in order]
+    print(f"{'sel':>3}  {'cached':>6}  {'id':36}  type      name")
+    print("-" * 92)
+    for u in uuids:
+        c = reg[u]
+        print(f"{'  ✓' if u in sel else '   '}  "
+              f"{'  ✓   ' if u in cached else '      '}  {u:36}  "
+              f"{str(c.get('type','?')):8}  {c.get('name','?')}")
+    print(f"\nconfig: {CONFIG_PATH}")
+
+
+# ── subcommand: dropdown (fuzzel) ────────────────────────────────────────────
+def cmd_dropdown() -> None:
+    occs, cfg, tz = get_occurrences()
+    now = datetime.now(tz)
+    entries: list[dict] = []   # {label, action, arg}
+    labels = {0: "Today", 1: "Tom"}
+    for o in occs:
+        s, e = parse(o["start"]), parse(o["end"])
+        offset = (s.date() - now.date()).days
+        day = labels.get(offset, s.strftime("%a"))
+        when = "all-day  " if o["all_day"] else f"{s:%H:%M}–{e:%H:%M}"
+        state = "● " if (not o["all_day"] and s <= now < e) else "  "
+        mark = f" {o['link_icon'] or ICON_VIDEO}" if o["link"] else ""
+        label = f"{state}{day:>3} {when}  {o['title']}{mark}"
+        entries.append({"label": label,
+                        "action": "join" if o["link"] else "calendar",
+                        "arg": o["link"]})
+    entries.append({"label": f"{ICON_PASSIVE}  Open calendar in Thunderbird",
+                    "action": "calendar", "arg": None})
+
+    if not shutil.which("fuzzel"):
+        die("fuzzel is not installed (apt install fuzzel)")
+    menu = "\n".join(e["label"] for e in entries)
+    try:
+        res = subprocess.run(["fuzzel", "--dmenu", "--index", "--prompt", f"{ICON_ACTIVE}  ",
+                              "--lines", str(min(len(entries), 16)), "--width", "60"],
+                             input=menu, capture_output=True, text=True)
+    except FileNotFoundError:
+        die("fuzzel not found")
+    out = res.stdout.strip()
+    if not out:
+        return
+    try:
+        idx = int(out)
+    except ValueError:
+        return
+    if not (0 <= idx < len(entries)):
+        return
+    chosen = entries[idx]
+    if chosen["action"] == "join" and chosen["arg"]:
+        open_link(chosen["arg"])
+    else:
+        open_calendar()
+
+
+# ── subcommand: join ─────────────────────────────────────────────────────────
+def cmd_join() -> None:
+    occs, cfg, tz = get_occurrences()
+    now = datetime.now(tz)
+    linked = [o for o in occs if o["link"] and not o["all_day"]]
+    ongoing = sorted((o for o in linked if parse(o["start"]) <= now < parse(o["end"])),
+                     key=lambda o: o["end"])
+    upcoming = sorted((o for o in linked if now <= parse(o["start"]) <= now + timedelta(minutes=30)),
+                      key=lambda o: o["start"])
+    target = (ongoing or upcoming)
+    if not target:
+        notify("No meeting to join", "No ongoing or imminent meeting with a video link.")
+        return
+    open_link(target[0]["link"])
+
+
+# ── actions ──────────────────────────────────────────────────────────────────
+def open_link(url: str) -> None:
+    subprocess.Popen(["xdg-open", url], start_new_session=True,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def open_calendar() -> None:
+    # -calendar switches TB's tab; Wayland ignores self-raise, so focus via sway.
+    subprocess.Popen(["thunderbird", "-calendar"], start_new_session=True,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if shutil.which("swaymsg"):
+        subprocess.run(["swaymsg", '[app_id="thunderbird"] focus'],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def cmd_open_calendar() -> None:
+    open_calendar()
+
+
+def cmd_refresh() -> None:
+    reg = load_registry(find_profile())
+    cfg = load_config(reg)
+    CACHE_PATH.unlink(missing_ok=True)
+    subprocess.run(["pkill", f"-RTMIN+{cfg['waybar_signal']}", "waybar"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+# ── misc ─────────────────────────────────────────────────────────────────────
+def notify(summary: str, body: str = "") -> None:
+    if shutil.which("notify-send"):
+        subprocess.run(["notify-send", "-a", "tb-meetings", summary, body],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def log(msg: str) -> None:
+    print(f"tb-meetings: {msg}", file=sys.stderr)
+
+
+def die(msg: str) -> None:
+    log(msg)
+    # emit a valid (passive) payload so Waybar doesn't show a broken module.
+    print(json.dumps({"text": ICON_PASSIVE, "alt": "error",
+                      "class": ["meetings", "error"], "tooltip": f"tb-meetings: {msg}"}))
+    sys.exit(1)
+
+
+COMMANDS = {
+    "waybar": cmd_waybar,
+    "list-calendars": cmd_list_calendars,
+    "dropdown": cmd_dropdown,
+    "join": cmd_join,
+    "open-calendar": cmd_open_calendar,
+    "refresh": cmd_refresh,
+}
+
+
+def main() -> None:
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "waybar"
+    fn = COMMANDS.get(cmd)
+    if fn is None:
+        log(f"unknown command {cmd!r}; use one of: {', '.join(COMMANDS)}")
+        sys.exit(2)
+    fn()
+
+
+if __name__ == "__main__":
+    main()

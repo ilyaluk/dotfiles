@@ -11,6 +11,7 @@
 
   "modules-right": [
     //
+    "custom/meetings",
     "privacy",
     "mpris",
     "tray",
@@ -96,15 +97,12 @@
   },
   "tray": {
     "spacing": 7,
-    // this needs a patch from PR
-    "orders": {
-      "org.twosheds.iwgtk": -20,
-      "blueman": -10,
-      // tailscale systray id is systray_${pid}, current patch only supports fixed names,
-      // hence everything before is negative order, and everything after is positive order
-      "KeePassXC": 30,
-      "io.github.slgobinath.SafeEyes": 40,
-    },
+    // backport of upstream PR #4999.
+    // Items listed here are pinned to the edge in the configured order;
+    // anything not listed (e.g. tailscale, whose SNI id is systray_${pid})
+    // is placed alphabetically between the two groups.
+    "order-left": ["org.twosheds.iwgtk", "blueman"],
+    "order-right": ["KeePassXC", "io.github.slgobinath.SafeEyes"],
   },
   "pulseaudio": {
     "scroll-step": 0, // disable scroll volume change
@@ -153,6 +151,17 @@
   },
   "sway/language": {
     "format": "<span text_transform='uppercase' font_weight='bold'>{short}</span>",
+  },
+  "custom/meetings": {
+    // upcoming-meetings widget; see ~/.local/bin/tb-meetings and
+    // ~/.config/tb-meetings/config.toml (run `tb-meetings list-calendars`).
+    "exec": "tb-meetings waybar",
+    "return-type": "json",
+    "interval": 60, // re-eval each minute; the tool re-reads the DB only every 10m
+    "signal": 8, // `tb-meetings refresh` -> pkill -RTMIN+8 waybar
+    "tooltip": true,
+    "on-click": "tb-meetings dropdown", // fuzzel list of today/tomorrow
+    "on-click-right": "tb-meetings open-calendar",
   },
   "clock": {
     // welp, {:<span> doesn't work, so move opening tag outside, but closing inside

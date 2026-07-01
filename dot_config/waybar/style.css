@@ -105,6 +105,24 @@ menuitem {
     padding-right: 8px;
 }
 
+#custom-meetings {
+    padding: 0 9px;
+}
+#custom-meetings.passive {
+    color: #a0a0a0;
+}
+#custom-meetings.soon {
+    background-color: #d79921;
+    color: #000000;
+    border-radius: 5px;
+}
+#custom-meetings.ongoing {
+    color: #b8bb26;
+}
+#custom-meetings.error {
+    color: #cc6666;
+}
+
 #custom-dark_mode {
     padding: 0 5px;
     padding-right: 9px;
@@ -125,6 +143,7 @@ menuitem {
 #pulseaudio:hover,
 #idle_inhibitor:hover,
 #custom-dark_mode:hover,
+#custom-meetings:hover,
 #custom-power:hover,
 #mpris:hover,
 #dummy {
