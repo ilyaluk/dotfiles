@@ -106,7 +106,8 @@ menuitem {
 }
 
 #custom-meetings {
-    padding: 0 9px;
+    padding: 0 8px;
+    margin: 0;
 }
 #custom-meetings.passive {
     color: #a0a0a0;

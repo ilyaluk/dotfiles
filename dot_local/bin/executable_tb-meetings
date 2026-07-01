@@ -60,7 +60,8 @@ DEFAULTS = {
     "days_ahead": 1,         # dropdown/tooltip horizon (0 = today only, 1 = +tomorrow)
     "cache_ttl": 600,        # re-read the DB at most this often (seconds)
     "waybar_signal": 8,      # SIGRTMIN+N used by `refresh` (must match config.jsonc)
-    "max_title": 32,         # bar label truncation
+    "max_title": 32,         # bar label truncation (only when compact = false)
+    "compact": True,         # bar shows only the icon; name + countdown live in the tooltip
     "browser": "",           # command for VC links; empty ⇒ xdg-open. "{url}" = URL slot
     "included_calendars": [],  # empty ⇒ all cached calendars
 }
@@ -194,6 +195,7 @@ def write_default_config(reg: dict[str, dict]) -> None:
         f"days_ahead = {DEFAULTS['days_ahead']}        # dropdown horizon: 0=today, 1=+tomorrow",
         f"cache_ttl = {DEFAULTS['cache_ttl']}      # seconds between DB re-reads",
         f"waybar_signal = {DEFAULTS['waybar_signal']}       # SIGRTMIN+N (keep in sync with config.jsonc)",
+        f"compact = {'true' if DEFAULTS['compact'] else 'false'}      # bar = icon only (details in tooltip); false = icon + name + countdown",
         "",
         "# Command used to open video-call links. Empty ⇒ xdg-open (system default).",
         "# The URL is appended, or substituted for a literal {url} token if present.",
@@ -458,6 +460,7 @@ def cmd_waybar() -> None:
     ongoing = sorted((o for o in timed if parse(o["start"]) <= now < parse(o["end"])),
                      key=lambda o: o["end"])
 
+    detail = ""
     if upcoming:
         o, state = upcoming[0], "soon"
         mins = int((parse(o["start"]) - now).total_seconds() // 60)
@@ -469,8 +472,10 @@ def cmd_waybar() -> None:
     else:
         o, state = None, "passive"
 
-    if o is None:
-        text = ICON_PASSIVE
+    active_icon = ICON_PASSIVE if o is None else ICON_ACTIVE
+    if cfg.get("compact", True) or o is None:
+        # icon-only: state is carried by the glyph + CSS colour; details in tooltip
+        text = active_icon
     else:
         title = o["title"]
         if len(title) > cfg["max_title"]:
@@ -478,11 +483,16 @@ def cmd_waybar() -> None:
         link = ICON_VIDEO + " " if o["link"] else ""
         text = f"{ICON_ACTIVE} {link}{pango_escape(title)} · {detail}"
 
+    tooltip = build_tooltip(occs, now, tz, cfg)
+    if o is not None:  # surface the active meeting + countdown at the top of the tooltip
+        vid = f" {ICON_VIDEO}" if o["link"] else ""
+        tooltip = f"<b>{active_icon}  {pango_escape(o['title'])}{vid} · {detail}</b>\n\n" + tooltip
+
     print(json.dumps({
         "text": text,
         "alt": state,
         "class": ["meetings", state],
-        "tooltip": build_tooltip(occs, now, tz, cfg),
+        "tooltip": tooltip,
     }, ensure_ascii=False))
 
 
@@ -634,6 +644,27 @@ def cmd_refresh() -> None:
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def cmd_toggle_compact() -> None:
+    """Flip the `compact` config key and redraw the bar (bound to middle-click)."""
+    text = CONFIG_PATH.read_text() if CONFIG_PATH.exists() else ""
+    m = re.search(r'(?mi)^([ \t]*compact[ \t]*=[ \t]*)(true|false)\b', text)
+    if m:
+        newval = "false" if m.group(2).lower() == "true" else "true"
+        text = text[:m.start()] + m.group(1) + newval + text[m.end():]
+    else:
+        newval = "false" if DEFAULTS["compact"] else "true"
+        text = (text.rstrip("\n") + "\n" if text.strip() else "") + f"compact = {newval}\n"
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CONFIG_PATH.write_text(text)
+    CACHE_PATH.unlink(missing_ok=True)  # cfg is cached with the events; force a re-read
+    try:
+        sig = load_config(load_registry(find_profile())).get("waybar_signal", DEFAULTS["waybar_signal"])
+    except Exception:
+        sig = DEFAULTS["waybar_signal"]
+    subprocess.run(["pkill", f"-RTMIN+{sig}", "waybar"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 # ── misc ─────────────────────────────────────────────────────────────────────
 def notify(summary: str, body: str = "") -> None:
     if shutil.which("notify-send"):
@@ -660,6 +691,7 @@ COMMANDS = {
     "join": cmd_join,
     "open-calendar": cmd_open_calendar,
     "refresh": cmd_refresh,
+    "toggle-compact": cmd_toggle_compact,
 }
 
 

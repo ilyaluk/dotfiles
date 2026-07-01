@@ -161,6 +161,7 @@
     "signal": 8, // `tb-meetings refresh` -> pkill -RTMIN+8 waybar
     "tooltip": true,
     "on-click": "tb-meetings dropdown", // fuzzel list of today/tomorrow
+    "on-click-middle": "tb-meetings toggle-compact", // icon-only <-> full label
     "on-click-right": "tb-meetings open-calendar",
   },
   "clock": {
