@@ -58,7 +58,8 @@ exec swayidle -w \
 exec systemctl --user import-environment XDG_DATA_DIRS
 
 # Status Bar
-exec systemd-cat waybar
+# wrapper auto-restarts waybar after crashes and stamps each exit in the journal
+exec 'while :; do systemd-cat -t waybar -- waybar -l debug; echo "waybar exited $?" | systemd-cat -t waybar -p err; sleep 2; done'
 
 # background GUI services
 exec systemd-cat lxpolkit
@@ -67,6 +68,7 @@ exec systemd-cat --identifier=geoclue /usr/libexec/geoclue-2.0/demos/agent
 exec systemd-cat gammastep
 
 # Tray apps
+exec systemd-cat udiskie -t -F
 exec systemd-cat iwgtk -i
 # add some sleep for waybar to initialize
 exec 'sleep 1; systemd-cat blueman-applet'
@@ -156,9 +158,6 @@ input "1739:53160:SYNA802E:00_06CB:CFA8_Touchpad" {
 #
 # Moving around:
 #
-    # Wrap focus when reaching the end of a workspace, don't switch to other output
-    focus_wrapping workspace
-
     # Move your focus around
     bindsym --to-code $mod+$left focus left
     bindsym --to-code $mod+$down focus down
