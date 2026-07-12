@@ -215,6 +215,7 @@ export LESS="RSXF"
 export TG_FETCH_DEPENDENCY_OUTPUT_FROM_STATE=true
 export LIMA_SHELL=zsh
 export KUBECTL_EXTERNAL_DIFF="colordiff -N -u"
+export SBX_NO_TELEMETRY=1
 
 # ================================================
 # Aliases / functions
@@ -256,7 +257,14 @@ alias awsp='export AWS_PROFILE=$(cat ~/.aws/config | grep "^\[profile" | cut -d"
 alias awsup='unset AWS_PROFILE'
 alias awsl='aws sso login'
 
-alias ghprv='gh pr view --web $(jj bookmark list -r "heads(::@- & bookmarks())" -T name)'
+# PR head = local bookmark on the latest bookmarked ancestor of @-. Use jj log,
+# not `jj bookmark list -T name`: that emits the name once per local+remote ref,
+# concatenating to e.g. "mainmain" when the bookmark is tracked on a 2nd remote.
+function ghprv() {
+    local head
+    head=$(jj log -r "heads(::@- & bookmarks())" --no-graph -T 'local_bookmarks.map(|b| b.name()).join(" ")' | cut -d' ' -f1)
+    gh pr view --web "$head"
+}
 
 # ================================================
 # jj aliases / functions
@@ -273,7 +281,7 @@ alias jza='jj za'
 alias jzt='jj zt'
 alias jsp='jj squash && jj git push'
 alias jgp='jj git push'
-alias jgf='jj git fetch'
+alias jgf='jj git fetch --all-remotes'
 alias jbm='jj tug'
 alias jbmp='jj tug && jj git push'
 alias ju='jjui'
@@ -302,8 +310,15 @@ function newpr() {
         fi
         change_id="@-"
     fi
-    base=$(jj log -r "latest(::(${change_id}-) & bookmarks())" -T bookmarks --no-graph | cut -d' ' -f1)
-    branch=$(jj log -r "${change_id} & bookmarks()" -T bookmarks --no-graph)
+    # base = nearest ancestor bookmark. Include remote_bookmarks() so a base that
+    # only lives on another remote (e.g. main@agent, when local main diverged) is
+    # still found; b.name() drops the `*`/`@remote` markers, preferring the local
+    # name and falling back to the remote one (so main@agent -> main).
+    base=$(jj log -r "latest(::(${change_id}-) & (bookmarks() | remote_bookmarks()))" --no-graph \
+        -T 'if(local_bookmarks, local_bookmarks.map(|b| b.name()).join("\n"), remote_bookmarks.map(|b| b.name()).join("\n"))' | head -n1)
+    # branch = the change's own (local) bookmark; b.name() strips the `*`/`@remote`
+    # markers a divergent second remote would otherwise leak into the name.
+    branch=$(jj log -r "${change_id} & bookmarks()" --no-graph -T 'local_bookmarks.map(|b| b.name()).join(" ")')
     if [[ -z "$branch" ]]; then
         echo "Generating suggested branch name..."
         suggest=$(
@@ -327,9 +342,13 @@ function newpr() {
     else
         jj git push -c "$change_id"
     fi
-    head=$(jj log -r "$change_id" -T bookmarks --no-graph)
+    head=$(jj log -r "$change_id" --no-graph -T 'local_bookmarks.map(|b| b.name()).join(" ")')
     gh pr create -H $head -B $base
     ghprv
+}
+
+function wav2aac() {
+	fdkaac -m 5 -o "${1%.*}.m4a" "$1"
 }
 
 # ssh-agent sock
