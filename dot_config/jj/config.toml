@@ -154,4 +154,4 @@ command = ["tg-fmt"]
 patterns = ["glob:'**/terragrunt.hcl'"]
 
 [merge-tools.zed]
-diff-args = ["--diff", "$left", "$right"]
+diff-args = ["-a", "--diff", "$left", "$right"]
