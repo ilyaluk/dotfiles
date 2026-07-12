@@ -1,0 +1,5 @@
+# Use a symbolic icon so waybar recolors it to the bar foreground,
+# matching iwgtk/blueman (blueman publishes blueman-tray-symbolic).
+# Solid USB-stick glyph; drive-removable-media-symbolic has a heavy outline.
+icon_names:
+  media: [media-removable-symbolic]

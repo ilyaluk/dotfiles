@@ -96,12 +96,12 @@
     },
   },
   "tray": {
-    "spacing": 7,
+    "spacing": 5,
     // backport of upstream PR #4999.
     // Items listed here are pinned to the edge in the configured order;
     // anything not listed (e.g. tailscale, whose SNI id is systray_${pid})
     // is placed alphabetically between the two groups.
-    "order-left": ["org.twosheds.iwgtk", "blueman"],
+    "order-left": ["org.twosheds.iwgtk", "blueman", "udiskie"],
     "order-right": ["KeePassXC", "io.github.slgobinath.SafeEyes"],
   },
   "pulseaudio": {
