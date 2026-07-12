@@ -32,6 +32,8 @@ mitmproxy = "latest"
 python = "3.12.12"
 talosctl = "latest"
 foundry = "latest"
+s5cmd = "latest"
+dyff = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["terraform"]
