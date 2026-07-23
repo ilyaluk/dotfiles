@@ -1,6 +1,20 @@
 *.md
 pkgs
 .config/macos-defaults
+{{- if .work }}
+# personal-only stuff
+{{- else }}
+# work-only stuff
+.config/k9s
+.local/bin/k9s-*
+.local/bin/kubectl-use
+.local/bin/kubectl-unuse
+.local/bin/kubectl_complete-use
+.local/bin/sbx-claude-fb*
+.local/bin/tg-fmt
+.terraform.d
+.terraformrc
+{{- end }}
 {{- if ne .chezmoi.os "darwin" }}
 Library
 .aerospace.toml

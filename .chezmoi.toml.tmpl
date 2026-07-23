@@ -1,3 +1,4 @@
+{{ $work := promptBoolOnce . "work" "Is this a work account" false -}}
 {{ $email := promptStringOnce . "email" "Default email on this machine" "ilya@luk.moe" -}}
 {{ $zshHostColor := promptStringOnce . "zshHostColor" "Hostname color in zsh (empty - no)" "" -}}
 
@@ -5,6 +6,7 @@
     autoCommit = true
 
 [data]
+    work = {{ $work }}
     email = {{ $email | quote }}
     hasNotch = {{ promptBoolOnce . "hasNotch" "Does this machine have notch" true }}
     zshHostColor = {{ $zshHostColor | quote }}

@@ -1,9 +1,9 @@
-{{ if eq .chezmoi.os "linux" -}}
+{{ if and (eq .chezmoi.os "linux") (not .work) -}}
 #!/bin/zsh
 set -ex
 
 sudo apt update
 # remove comments and join lines into a single line
-sudo apt install {{ include "pkgs/apt" | replaceAllRegex "^#.*\n" ""  | replace "\n" " " }}
+sudo apt install {{ include "pkgs/apt" | replaceAllRegex "(?m)^#.*$" "" | replace "\n" " " }}
 sudo apt upgrade
 {{ end }}

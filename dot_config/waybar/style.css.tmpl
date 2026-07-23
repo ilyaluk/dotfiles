@@ -51,11 +51,11 @@ menuitem {
 }
 
 #workspaces button.focused {
-    background-color: #6e806e;
+    background-color: {{ if .work }}#806e80{{ else }}#6e806e{{ end }};
 }
 
 #workspaces button.visible:not(.focused) {
-    background-color: #374037;
+    background-color: {{ if .work }}#403740{{ else }}#374037{{ end }};
 }
 
 #workspaces button.urgent {

@@ -85,7 +85,12 @@ exec systemd-cat sway-kill-dialogs-on-unfocus.sh
 # Autostart apps
 exec systemd-cat firefox-esr
 exec systemd-cat zed
+{{ if .work -}}
+# TODO: install the Slack PWA in the work account and put its FFPWA id here
+# exec systemd-cat firefoxpwa site launch <slack-ffpwa-id>
+{{ else -}}
 exec systemd-cat org.telegram.desktop
+{{ end -}}
 exec systemd-cat keepassxc
 exec systemd-cat thunderbird
 
@@ -127,8 +132,6 @@ input "1739:53160:SYNA802E:00_06CB:CFA8_Touchpad" {
 input "5426:118:ProClick_Mouse" {
     pointer_accel 0.4
 }
-
-
 
 ### Key bindings
 #
@@ -325,8 +328,12 @@ bindsym --to-code $mod+r mode "resize"
 # Styling
 
 # `man 5 sway` for more information about these colorss
-# changed only "indicator" from default
+# changed only "indicator" from default; work account gets purple accents
+{{ if .work -}}
+client.focused #7a4c99 #4f2877 #ffffff #6f298a #4f2877
+{{ else -}}
 client.focused #4c7899 #285577 #ffffff #29728A #285577
+{{ end -}}
 
 # Titlebar style
 font JetBrainsMonoNerdFont 9

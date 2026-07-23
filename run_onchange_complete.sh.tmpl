@@ -11,14 +11,16 @@ complete() {
 }
 
 complete mise completion zsh
-complete kubectl completion zsh
 complete gh completion -s zsh
 complete jj util completion zsh
 complete atuin gen-completions --shell zsh
 complete tailscale completion zsh
 complete uv generate-shell-completion zsh
-complete k9s completion zsh
 complete yq completion zsh
+{{ if .work -}}
+complete kubectl completion zsh
+complete k9s completion zsh
 complete helm completion zsh
+{{ end -}}
 
 {{- end }}
