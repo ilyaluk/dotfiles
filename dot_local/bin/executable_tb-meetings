@@ -301,6 +301,7 @@ def expand_master(dtstart, duration: timedelta, recurrence_ical: str | None,
 # ── DB read → occurrences ────────────────────────────────────────────────────
 SQL = """
 SELECT e.cal_id, e.id, e.title, e.event_start, e.event_start_tz, e.event_end,
+  e.ical_status,
   (e.flags & 8)=8 AS all_day, (e.flags & 16)=16 AS recurring,
   (SELECT COUNT(*) FROM cal_attendees a WHERE a.item_id=e.id AND a.cal_id=e.cal_id
      AND a.recurrence_id IS e.recurrence_id AND a.icalString LIKE 'ATTENDEE%') AS n_att,
@@ -317,7 +318,12 @@ SELECT e.cal_id, e.id, e.title, e.event_start, e.event_start_tz, e.event_end,
 FROM cal_events e
 WHERE e.cal_id IN (__CALS__) AND (e.offline_journal IS NULL OR e.offline_journal!=3)
   AND ( (e.recurrence_id IS NULL AND (e.flags&16)=0 AND e.event_start < ? AND e.event_end > ?)
-     OR (e.recurrence_id IS NULL AND (e.flags&16)=16) )
+     OR (e.recurrence_id IS NULL AND (e.flags&16)=16)
+     -- exception/override rows (a moved or edited single instance): treat as a
+     -- standalone event at its *new* time. Required for an instance relocated
+     -- into the window from a base date outside it — the master never generates
+     -- that base occurrence, so an in-place override patch would never fire.
+     OR (e.recurrence_id IS NOT NULL AND e.event_start < ? AND e.event_end > ?) )
 """
 
 
@@ -369,13 +375,18 @@ def read_events(profile: Path, cal_ids: list[str], reg: dict, tz: ZoneInfo,
     con, tmpdir = open_calendar_snapshot(profile / "calendar-data" / "cache.sqlite")
     try:
         ph = ",".join("?" * len(cal_ids))
+        wb, wa = to_us(win_b), to_us(win_a)
         rows = con.execute(SQL.replace("__CALS__", ph),
-                           (*cal_ids, to_us(win_b), to_us(win_a))).fetchall()
-        overrides: dict[tuple, sqlite3.Row] = {}
-        for o in con.execute(
-            f"SELECT id,cal_id,recurrence_id,event_start,event_end,ical_status "
-            f"FROM cal_events WHERE cal_id IN ({ph}) AND recurrence_id IS NOT NULL", tuple(cal_ids)):
-            overrides[(o["cal_id"], o["id"], o["recurrence_id"])] = o
+                           (*cal_ids, wb, wa, wb, wa)).fetchall()
+        # every (cal, item, original-occurrence) that has an exception — used to
+        # suppress the master's copy of that occurrence, since the exception row
+        # is emitted in its own right (above) at its new time / with its edits.
+        override_keys = {
+            (o["cal_id"], o["id"], o["recurrence_id"])
+            for o in con.execute(
+                f"SELECT id,cal_id,recurrence_id FROM cal_events "
+                f"WHERE cal_id IN ({ph}) AND recurrence_id IS NOT NULL", tuple(cal_ids))
+        }
     finally:
         con.close()
         if tmpdir is not None:
@@ -383,6 +394,8 @@ def read_events(profile: Path, cal_ids: list[str], reg: dict, tz: ZoneInfo,
 
     occs: list[dict] = []
     for r in rows:
+        if (r["ical_status"] or "") == "CANCELLED":   # dropped / cancelled instance
+            continue
         all_day = bool(r["all_day"])
         dur = timedelta(microseconds=r["event_end"] - r["event_start"])
         if r["recurring"]:
@@ -398,11 +411,12 @@ def read_events(profile: Path, cal_ids: list[str], reg: dict, tz: ZoneInfo,
 
         icon, link = find_link(r["conf"], r["description"], r["location"], r["url"])
         for (start, end, occ_us) in spans:
-            ov = overrides.get((r["cal_id"], r["id"], occ_us))
-            if ov is not None:
-                if (ov["ical_status"] or "") == "CANCELLED":
-                    continue
-                start, end = prtime_to_utc(ov["event_start"]), prtime_to_utc(ov["event_end"])
+            # An overridden occurrence is emitted from its own exception row, so
+            # skip the master's copy here — otherwise a moved instance would show
+            # twice (or at its stale pre-move time). Only masters need this guard;
+            # an exception row's own occ_us must not suppress itself.
+            if r["recurring"] and (r["cal_id"], r["id"], occ_us) in override_keys:
+                continue
             sl, el = as_local(start, tz), as_local(end, tz)
             if sl >= win_b:   # strict upper bound so days_ahead is exact
                 continue
