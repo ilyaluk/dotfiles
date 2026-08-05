@@ -1,0 +1,7 @@
+#!/bin/zsh
+set -ex
+
+# config.toml hash: {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
+# work: {{ .work }}
+
+mise install
