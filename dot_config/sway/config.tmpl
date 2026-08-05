@@ -60,8 +60,10 @@ exec swayidle -w \
 exec systemctl --user import-environment XDG_DATA_DIRS
 
 # Status Bar
-# wrapper auto-restarts waybar after crashes and stamps each exit in the journal
-exec 'while :; do systemd-cat -t waybar -- waybar -l debug; echo "waybar exited $?" | systemd-cat -t waybar -p err; sleep 2; done'
+# waybar-respawn restarts waybar after crashes; reap the wrapper left over from a
+# previous sway session first, else its respawns show up as extra bars.
+# pkill -x matches on comm, so it can't match the sh -c running this line.
+exec 'pkill -x waybar-respawn; pkill -x waybar; waybar-respawn'
 
 # background GUI services
 exec systemd-cat lxpolkit

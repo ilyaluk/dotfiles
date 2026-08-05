@@ -1,0 +1,15 @@
+#!/bin/sh
+# Restart waybar after crashes (it segfaults roughly weekly) and stamp each exit
+# in the journal.
+#
+# Sway's config reaps the wrapper left behind by a previous session with
+# `pkill -x waybar-respawn` before starting a new one -- without that, the old
+# wrapper keeps respawning waybar and you end up with a bar per sway session.
+# That match is against /proc/<pid>/comm, so keep this file's name at 15
+# characters or less, or it gets truncated there and the reap silently misses.
+
+while :; do
+    systemd-cat -t waybar -- waybar -l debug
+    echo "waybar exited $?" | systemd-cat -t waybar -p err
+    sleep 2
+done
