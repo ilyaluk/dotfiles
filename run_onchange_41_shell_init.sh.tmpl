@@ -1,0 +1,20 @@
+#!/bin/zsh
+set -ex
+
+# Shell integration snippets, generated from the installed tools rather than
+# vendored so they can't drift from the binaries. Sourced by .zshrc.
+#
+# The versions below are what makes chezmoi rewrite (and so re-run) this script
+# on a tool upgrade. lookPath keeps them from hard-failing the whole apply on a
+# fresh machine, where mise hasn't installed anything yet at template time:
+# zoxide: {{ if lookPath "zoxide" }}{{ output "zoxide" "--version" | trim }}{{ end }}
+# atuin:  {{ if lookPath "atuin" }}{{ output "atuin" "--version" | trim }}{{ end }}
+
+mkdir -p ~/.zsh
+
+# --cmd cd makes zoxide own `cd`/`cdi` and the `cd` completion; .zshrc then
+# wraps `cd` once more so `cd path/to/deleted-file` lands in its directory.
+zoxide init zsh --cmd cd > ~/.zsh/zoxide
+
+# Reads ~/.config/atuin/config.toml, so keybind/popup settings land here too.
+atuin init zsh > ~/.zsh/atuin
