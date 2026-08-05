@@ -34,7 +34,7 @@ caddy
 firmware-intel-graphics/trixie-backports
 fprintd
 intel-gpu-tools
-intel-media-va-driver
+intel-media-va-driver-non-free
 iwd
 libpam-fprintd
 libva-drm2
@@ -55,7 +55,6 @@ tpm2-tools
 
 # UI apps
 firefox-esr
-gimp
 keepassxc-full
 meld
 mpv
