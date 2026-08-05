@@ -23,7 +23,7 @@ local cyan='%6F'
 local magenta='%5F'
 
 # snapshot once, and ignore working copy changes for all commands for speed
-jj --at-operation=@ debug snapshot
+jj --at-operation=@ util snapshot |& grep -Ev "(No snapshot needed.|Snapshot complete.)"
 
 local op_id=$(jj op show -T 'id' --no-op-diff)
 
