@@ -1,0 +1,43 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/zsh
+set -ex -o pipefail
+
+# Packages that come from no package manager. Each ships its own updater, so
+# this only bootstraps them into $HOME and leaves anything already installed
+# alone. Adding an entry rewrites the script, which is what re-runs it.
+
+tmp=$(mktemp -d)
+trap "rm -rf $tmp" EXIT
+
+# Zed's install.sh is a curl | sh around this tarball; the symlink and the
+# absolutised .desktop paths (the Exec= sed hits TryExec= too) are all it adds.
+if [[ ! -x ~/.local/zed.app/bin/zed ]]; then
+    curl -fsSL "https://cloud.zed.dev/releases/stable/latest/download?asset=zed&os=linux&arch=$(uname -m)" \
+        | tar xz -C ~/.local
+    mkdir -p ~/.local/bin ~/.local/share/applications
+    ln -sf ~/.local/zed.app/bin/zed ~/.local/bin/zed
+    sed -e "s|Icon=zed|Icon=$HOME/.local/zed.app/share/icons/hicolor/512x512/apps/zed.png|g" \
+        -e "s|Exec=zed|Exec=$HOME/.local/zed.app/bin/zed|g" \
+        ~/.local/zed.app/share/applications/dev.zed.Zed.desktop \
+        > ~/.local/share/applications/dev.zed.Zed.desktop
+fi
+
+# No tarball for Claude Code: a release is a bare binary plus a manifest, and
+# `claude install` is what builds ~/.local/share/claude/versions and the symlink
+# into it. The installer checks the binary against the manifest sha256.
+if [[ ! -x ~/.local/bin/claude ]]; then
+    curl -fsSL https://claude.ai/install.sh | bash
+fi
+
+# docker-sbx is packaged for Ubuntu only, so use the tarball's install.sh; it
+# defaults to ~/.docker/sbx, where the ~/.local/bin/sbx wrapper looks. Drop its
+# AppArmor profile first: that one goes to /etc/apparmor.d and the failure
+# aborts install.sh half-done. No loss — it guards Ubuntu's
+# kernel.apparmor_restrict_unprivileged_userns and names the shim in /usr/libexec.
+if [[ ! -x ~/.docker/sbx/bin/sbx ]]; then
+    curl -fsSL https://github.com/docker/sbx-releases/releases/latest/download/DockerSandboxes-linux-{{ .chezmoi.arch }}.tar.gz \
+        | tar xz -C $tmp
+    rm -f $tmp/docker-sbx/apparmor-profile
+    $tmp/docker-sbx/install.sh
+fi
+{{ end }}
