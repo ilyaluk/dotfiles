@@ -78,6 +78,8 @@ exec systemd-cat gammastep
 
 # Tray apps
 exec systemd-cat udiskie -t -F
+# iwd takes only one signal level agent per device, so with two sessions logged in
+# the second iwgtk gets no level updates and stays on the gray offline icon.
 exec systemd-cat iwgtk -i
 # add some sleep for waybar to initialize
 exec 'sleep 1; systemd-cat blueman-applet'
