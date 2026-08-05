@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-sbx run fb -- --resume --dangerously-skip-permissions
+sbx run --name fb -- --resume --dangerously-skip-permissions

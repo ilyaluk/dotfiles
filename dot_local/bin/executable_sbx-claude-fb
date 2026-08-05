@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-sbx run fb
+sbx run --name fb
