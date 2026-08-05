@@ -59,6 +59,11 @@ exec swayidle -w \
 # this is needed for correct dir order in telegram, use firefox and not chromium for links
 exec systemctl --user import-environment XDG_DATA_DIRS
 
+# set here and not in a run_onchange script: gsettings silently drops the write when
+# there's no session bus. symbolic-status-icons is what makes blueman publish
+# blueman-tray-symbolic, which waybar recolors to the bar foreground.
+exec 'gsettings set org.gnome.desktop.interface gtk-enable-primary-paste false; gsettings set org.blueman.general symbolic-status-icons true'
+
 # Status Bar
 # waybar-respawn restarts waybar after crashes; reap the wrapper left over from a
 # previous sway session first, else its respawns show up as extra bars.
