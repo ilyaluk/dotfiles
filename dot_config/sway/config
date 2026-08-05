@@ -124,6 +124,12 @@ input "1739:53160:SYNA802E:00_06CB:CFA8_Touchpad" {
     natural_scroll enabled
 }
 
+input "5426:118:ProClick_Mouse" {
+    pointer_accel 0.4
+}
+
+
+
 ### Key bindings
 #
 # Basics:

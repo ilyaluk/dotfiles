@@ -90,6 +90,7 @@ concat(
 '''
 
 [aliases]
+stat = ["show", "--stat"]
 ll = ["log", "-T", "log_with_files"]
 shell_status = ["show", "-T", "show_shell_status", "@"]
 

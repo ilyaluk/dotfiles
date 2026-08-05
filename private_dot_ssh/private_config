@@ -1,0 +1,29 @@
+Host *
+  User ubuntu
+  AddKeysToAgent yes
+  ServerAliveInterval 60
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+  #ChallengeResponseAuthentication no
+  #ControlMaster auto
+  #ControlPath ~/.ssh/ssh-%r@%h:%p
+  #ControlPersist 60m
+  StrictHostKeyChecking accept-new
+  ExitOnForwardFailure yes
+
+Include config.d/*
+
+# >>> docker sandboxes (managed) >>>
+Host *.sbx
+    User _default_user_
+    ProxyCommand "/home/ilya/.docker/sbx/bin/sbx" ssh proxy %n
+    IdentityAgent none
+    IdentityFile /dev/null
+    IdentitiesOnly yes
+    ControlMaster no
+    ControlPath none
+    UserKnownHostsFile "/home/ilya/.config/sandboxes/sandboxes/ssh/known_hosts"
+    KnownHostsCommand "/home/ilya/.docker/sbx/bin/sbx" ssh known-hosts %H
+    StrictHostKeyChecking yes
+#    SendEnv *
+# <<< docker sandboxes (managed) <<<
