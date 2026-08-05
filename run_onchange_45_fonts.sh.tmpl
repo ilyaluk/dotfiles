@@ -1,0 +1,38 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/zsh
+set -ex
+
+# Fonts installed outside of apt, into the per-user font dir. Bumping a version
+# or hash below rewrites this script, which is what makes chezmoi re-run it.
+jetbrains_ver=3.4.0
+jetbrains_sha=ef552a3e638f25125c6ad4c51176a6adcdce295ab1d2ffacf0db060caf8c1582
+emoji_ver=18.4
+emoji_sha=a4fd077bd11437b4940d8cf08f4084e1edfd4ae359f92573ec576652f885eabd
+
+fonts=~/.local/share/fonts
+tmp=$(mktemp -d)
+trap "rm -rf $tmp" EXIT
+mkdir -p $fonts
+
+fetch() {
+    curl -fsSL -o "$2" "$1"
+    sha256sum -c <<< "$3  $2"
+}
+
+fetch https://github.com/ryanoasis/nerd-fonts/releases/download/v$jetbrains_ver/JetBrainsMono.tar.xz \
+    $tmp/JetBrainsMono.tar.xz $jetbrains_sha
+rm -rf $fonts/JetBrainsMono
+mkdir -p $fonts/JetBrainsMono
+tar xf $tmp/JetBrainsMono.tar.xz -C $fonts/JetBrainsMono --exclude=README.md
+
+# Apple's emoji font repacked for Linux; .config/fontconfig/fonts.conf aliases
+# every generic family and Noto/Segoe emoji onto it.
+fetch https://github.com/samuelngs/apple-emoji-linux/releases/download/v$emoji_ver/AppleColorEmoji.ttf \
+    $tmp/AppleColorEmoji.ttf $emoji_sha
+mv $tmp/AppleColorEmoji.ttf $fonts/AppleColorEmoji.ttf
+
+# the nerd font tarball used to be unpacked flat into $fonts
+rm -f $fonts/JetBrainsMono*NerdFont*.ttf(N) $fonts/OFL.txt(N)
+
+fc-cache -f
+{{ end }}
