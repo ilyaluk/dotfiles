@@ -16,14 +16,14 @@ Include config.d/*
 # >>> docker sandboxes (managed) >>>
 Host *.sbx
     User _default_user_
-    ProxyCommand "/home/ilya/.docker/sbx/bin/sbx" ssh proxy %n
+    ProxyCommand "{{ .chezmoi.homeDir }}/.docker/sbx/bin/sbx" ssh proxy %n
     IdentityAgent none
     IdentityFile /dev/null
     IdentitiesOnly yes
     ControlMaster no
     ControlPath none
-    UserKnownHostsFile "/home/ilya/.config/sandboxes/sandboxes/ssh/known_hosts"
-    KnownHostsCommand "/home/ilya/.docker/sbx/bin/sbx" ssh known-hosts %H
+    UserKnownHostsFile "{{ .chezmoi.homeDir }}/.config/sandboxes/sandboxes/ssh/known_hosts"
+    KnownHostsCommand "{{ .chezmoi.homeDir }}/.docker/sbx/bin/sbx" ssh known-hosts %H
     StrictHostKeyChecking yes
 #    SendEnv *
 # <<< docker sandboxes (managed) <<<
